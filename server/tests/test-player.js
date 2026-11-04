@@ -1,4 +1,4 @@
-const Player = require("./src/classes/Player");
+const Player = require("../src/classes/Player");
 
 const player = new Player("123", "Riya");
 

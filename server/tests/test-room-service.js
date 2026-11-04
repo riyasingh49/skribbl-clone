@@ -1,4 +1,4 @@
-const RoomService = require("./src/services/RoomService");
+const RoomService = require("../src/services/RoomService");
 
 const roomService = new RoomService();
 

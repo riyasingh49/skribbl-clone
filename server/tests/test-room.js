@@ -1,5 +1,5 @@
-const Player = require("./src/classes/Player");
-const Room = require("./src/classes/Room");
+const Player = require("../src/classes/Player");
+const Room = require("../src/classes/Room");
 
 const player1 = new Player("101", "Riya");
 const player2 = new Player("102", "Alex");

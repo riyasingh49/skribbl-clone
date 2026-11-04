@@ -1,6 +1,7 @@
 class Game {
     constructor(room) {
         this.room = room;
+        
 
         // Game configuration comes from the Room
         this.totalRounds = room.settings.totalRounds;
@@ -9,6 +10,7 @@ class Game {
         this.currentRound = 0;
         this.currentDrawerIndex = 0;
         this.currentWord = null;
+        this.wordChoices = [];
         this.roundStatus = "waiting";
 
         // Preserve the order in which players joined
@@ -34,6 +36,7 @@ class Game {
 
     startRound() {
         this.currentWord = null;
+        this.wordChoices = [];
         this.roundStatus = "selecting-word";
     }
 
@@ -47,13 +50,26 @@ class Game {
         if (this.roundStatus !== "selecting-word") {
             throw new Error("Word cannot be selected right now");
         }
-
-        if (typeof word !== "string" || !word.trim()) {
-            throw new Error("A valid word must be selected");
+    
+        if (!this.wordChoices.includes(word)) {
+            throw new Error("Invalid word selection");
         }
-
-        this.currentWord = word.trim();
+    
+        this.currentWord = word;
+        this.wordChoices = [];
         this.roundStatus = "drawing";
+    }
+
+    setWordChoices(choices) {
+        if (this.roundStatus !== "selecting-word") {
+            throw new Error("Word choices cannot be set right now");
+        }
+    
+        if (!Array.isArray(choices) || choices.length !== 3) {
+            throw new Error("Exactly 3 word choices are required");
+        }
+    
+        this.wordChoices = [...choices];
     }
 
     endRound() {

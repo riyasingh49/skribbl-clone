@@ -1,23 +1,39 @@
-const Player = require("./src/classes/Player");
-const Room = require("./src/classes/Room");
-const Game = require("./src/classes/Game");
+
+const Player = require("../src/classes/Player");
+const Room = require("../src/classes/Room");
+const Game = require("../src/classes/Game");
 
 // Create players
 const player1 = new Player("101", "Riya");
 const player2 = new Player("102", "Alex");
 const player3 = new Player("103", "Sam");
 
-// Create a room with 2 rounds
+// Create room
 const room = new Room("ABC123", player1, {
     totalRounds: 2
 });
 
-// Add remaining players
 room.addPlayer(player2);
 room.addPlayer(player3);
 
 // Create game
 const game = new Game(room);
+
+// Helper function to select a word and finish a turn
+const finishTurn = (word) => {
+    game.setWordChoices([
+        word,
+        "Guitar",
+        "Rainbow"
+    ]);
+
+    game.setWord(word);
+
+    console.log("Selected word:", game.currentWord);
+
+    game.endRound();
+    game.nextTurn();
+};
 
 console.log("Starting game...");
 
@@ -27,41 +43,23 @@ console.log("Current round:", game.currentRound);
 console.log("Current drawer:", game.getCurrentDrawer().username);
 
 // Round 1
-game.setWord("Apple");
-console.log("Selected word:", game.currentWord);
-
-game.endRound();
-game.nextTurn();
+finishTurn("Apple");
 
 console.log("\nNext drawer:", game.getCurrentDrawer().username);
 
-// Player 2 finishes
-game.setWord("House");
-game.endRound();
-game.nextTurn();
+finishTurn("House");
 
 console.log("\nNext drawer:", game.getCurrentDrawer().username);
 
-// Player 3 finishes
-game.setWord("Car");
-game.endRound();
-game.nextTurn();
+finishTurn("Car");
 
 console.log("\nRound 2 begins");
 console.log("Current round:", game.currentRound);
 console.log("Current drawer:", game.getCurrentDrawer().username);
 
-// Finish remaining turns
-game.setWord("Tree");
-game.endRound();
-game.nextTurn();
-
-game.setWord("Book");
-game.endRound();
-game.nextTurn();
-
-game.setWord("Sun");
-game.endRound();
-game.nextTurn();
+// Round 2
+finishTurn("Tree");
+finishTurn("Book");
+finishTurn("Sun");
 
 console.log("\nFinal game status:", game.roundStatus);
