@@ -8,6 +8,7 @@ function App() {
     const [roomId, setRoomId] = useState("");
     const [username, setUsername] = useState("");
     const [error, setError] = useState("");
+    const [gameData, setGameData] = useState(null);
 
     useEffect(() => {
         socket.connect();
@@ -19,6 +20,7 @@ function App() {
         socket.on("disconnect", () => {
             setConnectionStatus("Disconnected");
             setRoomData(null);
+            setGameData(null);
         });
 
         socket.on("room-updated", (room) => {
@@ -29,11 +31,18 @@ function App() {
             console.log(`${player.username} left the room`);
         });
 
+        socket.on("game-started", (game) => {
+            console.log("Game started:", game);
+            setGameData(game);
+            setError("");
+        });
+
         return () => {
             socket.off("connect");
             socket.off("disconnect");
             socket.off("room-updated");
             socket.off("player-left");
+            socket.off("game-started");
             socket.disconnect();
         };
     }, []);
@@ -55,6 +64,7 @@ function App() {
                 if (response.success) {
                     setRoomData(response.room);
                     setRoomId(response.room.id);
+                    setGameData(null);
                 } else {
                     setError(response.error);
                 }
@@ -74,6 +84,7 @@ function App() {
             (response) => {
                 if (response.success) {
                     setRoomData(response.room);
+                    setGameData(null);
                 } else {
                     setError(response.error);
                 }
@@ -88,9 +99,21 @@ function App() {
             if (response.success) {
                 setRoomData(null);
                 setRoomId("");
-                console.log("Successfully left room");
+                setGameData(null);
             } else {
                 setError(response.error);
+            }
+        });
+    };
+
+    const handleStartGame = () => {
+        setError("");
+
+        socket.emit("start-game", (response) => {
+            if (!response.success) {
+                setError(response.error);
+            } else {
+                console.log(response.message);
             }
         });
     };
@@ -113,7 +136,10 @@ function App() {
 
                     <button
                         onClick={handleCreateRoom}
-                        disabled={connectionStatus !== "Connected"}
+                        disabled={
+                            connectionStatus !== "Connected" ||
+                            !username.trim()
+                        }
                     >
                         Create Room
                     </button>
@@ -130,7 +156,11 @@ function App() {
 
                     <button
                         onClick={handleJoinRoom}
-                        disabled={connectionStatus !== "Connected"}
+                        disabled={
+                            connectionStatus !== "Connected" ||
+                            !username.trim() ||
+                            !roomId.trim()
+                        }
                     >
                         Join Room
                     </button>
@@ -140,9 +170,10 @@ function App() {
                     <h2>Room Lobby</h2>
 
                     <h3>Room ID: {roomData.id}</h3>
-                    <p>Host ID: {roomData.hostId}</p>
 
-                    <h3>Players ({roomData.players.length})</h3>
+                    <h3>
+                        Players ({roomData.players.length})
+                    </h3>
 
                     {roomData.players.map((player) => (
                         <p key={player.id}>
@@ -151,13 +182,49 @@ function App() {
                         </p>
                     ))}
 
-                    <button onClick={handleLeaveRoom}>
-                        Leave Room
-                    </button>
+                    {!gameData ? (
+                        <>
+                            {socket.id === roomData.hostId && (
+                                <button
+                                    onClick={handleStartGame}
+                                    disabled={roomData.players.length < 2}
+                                >
+                                    Start Game
+                                </button>
+                            )}
+
+                            <br /><br />
+
+                            <button onClick={handleLeaveRoom}>
+                                Leave Room
+                            </button>
+                        </>
+                    ) : (
+                        <div>
+                            <h2>Game Started!</h2>
+
+                            <p>
+                                Round: {gameData.currentRound} /{" "}
+                                {gameData.totalRounds}
+                            </p>
+
+                            <p>
+                                Current Drawer: {gameData.drawer.username}
+                            </p>
+
+                            <p>
+                                Game Status: {gameData.status}
+                            </p>
+                        </div>
+                    )}
                 </>
             )}
 
-            {error && <p style={{ color: "red" }}>{error}</p>}
+            {error && (
+                <p style={{ color: "red" }}>
+                    {error}
+                </p>
+            )}
         </div>
     );
 }

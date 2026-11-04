@@ -1,5 +1,7 @@
 const RoomService = require("../services/RoomService");
 const registerRoomHandlers = require("./roomHandlers");
+const registerGameHandlers = require("./gameHandlers");
+
 
 // One shared RoomService instance for all connected players
 const roomService = new RoomService();
@@ -10,6 +12,7 @@ const registerSocketHandlers = (io) => {
 
         // Register room-related events
         registerRoomHandlers(io, socket, roomService);
+        registerGameHandlers(io, socket, roomService);
 
         socket.on("disconnect", () => {
             console.log("Player disconnected:", socket.id);
