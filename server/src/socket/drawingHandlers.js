@@ -3,22 +3,15 @@ const registerDrawingHandlers = (io, socket, roomService, gameService) => {
     socket.on("draw-line", (data) => {
         try {
             const room = roomService.getRoomForSocket(socket.id);
-
             if (!room) return;
-
             const game = gameService.getGame(room.id);
-
             if (!game || game.roundStatus !== "drawing") return;
-
             // Only the current drawer can draw
             const currentDrawer = game.getCurrentDrawer();
-
             if (!currentDrawer || currentDrawer.id !== socket.id) {
                 return;
             }
-
             const { from, to, color, lineWidth } = data || {};
-
             // Validate coordinates
             if (
                 !from ||
@@ -53,6 +46,21 @@ const registerDrawingHandlers = (io, socket, roomService, gameService) => {
         } catch (error) {
             console.error("Drawing error:", error.message);
         }
+    });
+
+    socket.on("undo-drawing", () => {
+        const room = roomService.getRoomForSocket(socket.id);
+        if (!room) return;
+    
+        const game = gameService.getGame(room.id);
+    
+        if (!game || game.roundStatus !== "drawing") return;
+    
+        const currentDrawer = game.getCurrentDrawer();
+    
+        if (!currentDrawer || currentDrawer.id !== socket.id) return;
+    
+        socket.to(room.id).emit("undo-drawing");
     });
 };
 

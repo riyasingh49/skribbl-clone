@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { socket } from "./socket/socket";
-import DrawingCanvas from "./components/DrawingCanvas";
+import DrawingCanvas from "./components/drawing/DrawingCanvas";
 
 function App() {
   const [connectionStatus, setConnectionStatus] = useState("Disconnected");
