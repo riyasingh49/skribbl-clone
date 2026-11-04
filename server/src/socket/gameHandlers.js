@@ -2,10 +2,8 @@ const Game = require("../classes/Game");
 const { getRandomWords } = require("../data/words");
 
 // Store active games by room ID.
-// This Map is shared by all socket connections.
-const activeGames = new Map();
 
-const registerGameHandlers = (io, socket, roomService) => {
+const registerGameHandlers = (io, socket, roomService, gameService) => {
 
     // START GAME
     socket.on("start-game", (callback) => {
@@ -27,7 +25,7 @@ const registerGameHandlers = (io, socket, roomService) => {
             }
 
             // Prevent multiple games in the same room
-            if (activeGames.has(room.id)) {
+            if (gameService.hasGame(room.id)) {
                 throw new Error("Game has already started");
             }
 
@@ -35,7 +33,7 @@ const registerGameHandlers = (io, socket, roomService) => {
 
             game.startGame();
 
-            activeGames.set(room.id, game);
+            gameService.createGame(room.id, game);
 
             const currentDrawer = game.getCurrentDrawer();
 
@@ -88,7 +86,7 @@ const registerGameHandlers = (io, socket, roomService) => {
                 throw new Error("You are not in a room");
             }
 
-            const game = activeGames.get(room.id);
+            const game = gameService.getGame(room.id);
 
             if (!game) {
                 throw new Error("No active game found");

@@ -1,18 +1,33 @@
 const RoomService = require("../services/RoomService");
+const GameService = require("../services/GameService");
+
 const registerRoomHandlers = require("./roomHandlers");
 const registerGameHandlers = require("./gameHandlers");
+const registerDrawingHandlers = require("./drawingHandlers");
 
-
-// One shared RoomService instance for all connected players
+// Shared service instances
 const roomService = new RoomService();
+const gameService = new GameService();
 
 const registerSocketHandlers = (io) => {
     io.on("connection", (socket) => {
         console.log("Player connected:", socket.id);
 
-        // Register room-related events
         registerRoomHandlers(io, socket, roomService);
-        registerGameHandlers(io, socket, roomService);
+
+        registerGameHandlers(
+            io,
+            socket,
+            roomService,
+            gameService
+        );
+
+        registerDrawingHandlers(
+            io,
+            socket,
+            roomService,
+            gameService
+        );
 
         socket.on("disconnect", () => {
             console.log("Player disconnected:", socket.id);

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { socket } from "./socket/socket";
+import DrawingCanvas from "./components/DrawingCanvas";
 
 function App() {
   const [connectionStatus, setConnectionStatus] = useState("Disconnected");
@@ -268,6 +269,15 @@ function App() {
                     ? `${gameData.drawer.username} is choosing a word...`
                     : "Waiting for the drawing round..."}
                 </p>
+              )}
+              {gameData.status === "drawing" && (
+                <div>
+                  <h3>Drawing Area</h3>
+
+                  <DrawingCanvas
+                    canDraw={socket.id === gameData.drawer.id}
+                  />
+                </div>
               )}
             </div>
           )}
