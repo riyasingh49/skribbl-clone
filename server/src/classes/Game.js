@@ -1,6 +1,9 @@
 class Game {
     constructor(room) {
         this.room = room;
+
+        this.correctGuessers = new Set();
+        
         // Game configuration comes from the Room
         this.totalRounds = room.settings.totalRounds;
 

@@ -1,116 +1,62 @@
-import { useEffect, useState } from "react";
-import { socket } from "../../socket/socket";
+import { useState } from "react";
+import useChat from "../../hooks/chat/useChat";
 
 function ChatPanel() {
-    const [messages, setMessages] = useState([]);
     const [message, setMessage] = useState("");
-    const [error, setError] = useState("");
-    const [notifications, setNotifications] = useState([]);
-    const [feedback, setFeedback] = useState("");
 
-    useEffect(() => {
-        const handleChatMessage = (newMessage) => {
-            setMessages((previousMessages) => [
-                ...previousMessages,
-                newMessage,
-            ]);
-        };
+    const {
+        messages,
+        error,
+        feedback,
+        sendMessage,
+    } = useChat();
 
-        const handleCorrectGuess = (data) => {
-            setNotifications((previous) => [
-                ...previous,
-                `${data.username} guessed the word correctly!`,
-            ]);
-        };
-
-        socket.on("correct-guess", handleCorrectGuess);
-
-        socket.on("chat-message", handleChatMessage);
-
-        return () => {
-            socket.off("chat-message", handleChatMessage);
-            socket.off("correct-guess", handleCorrectGuess);
-        };
-    }, []);
-
-    const handleSendMessage = (event) => {
+    const handleSendMessage = async (event) => {
         event.preventDefault();
 
         const trimmedMessage = message.trim();
 
         if (!trimmedMessage) return;
 
-        setFeedback("");
+        const sent = await sendMessage(trimmedMessage);
 
-        socket.emit(
-            "send-message",
-            { message: trimmedMessage },
-            (response) => {
-                if (!response?.success) {
-                    setFeedback(response?.error || "Message could not be sent");
-                    return;
-                }
-
-                if (response.correct) {
-                    setFeedback("Correct answer! Well done!");
-                } else if (response.incorrectGuess) {
-                    setFeedback("Wrong answer! Try again.");
-                }
-
-                setMessage("");
-            }
-        );
+        if (sent) {
+            setMessage("");
+        }
     };
 
     return (
-        <div style={{
-            width: "300px",
-            height: "450px",
-            border: "1px solid #ccc",
-            borderRadius: "8px",
-            padding: "12px",
-            display: "flex",
-            flexDirection: "column",
-        }}>
+        <div
+            style={{
+                width: "300px",
+                height: "450px",
+                border: "1px solid #ccc",
+                borderRadius: "8px",
+                padding: "12px",
+                display: "flex",
+                flexDirection: "column",
+            }}
+        >
             <h3>Room Chat</h3>
 
-            <div style={{
-                flex: 1,
-                overflowY: "auto",
-                marginBottom: "10px",
-            }}>
-                {notifications.map((notification, index) => (
-                    <p
-                        key={index}
-                        style={{
-                            color: "green",
-                            fontWeight: "bold",
-                        }}
-                    >
-                        {notification}
-                    </p>
-                ))}
+            <div
+                style={{
+                    flex: 1,
+                    overflowY: "auto",
+                    marginBottom: "10px",
+                }}
+            >
                 {messages.map((msg, index) => (
                     <p key={`${msg.id}-${msg.timestamp}-${index}`}>
                         <strong>{msg.username}: </strong>
                         {msg.message}
                     </p>
                 ))}
-                {feedback && (
-                    <p
-                        style={{
-                            color: feedback.startsWith("Wrong")
-                                ? "red"
-                                : feedback.startsWith("Correct")
-                                    ? "green"
-                                    : "orange",
-                            fontWeight: "bold",
-                        }}
-                    >
-                        {feedback}
-                    </p>
-                )}
             </div>
+
+            {feedback && (
+                <p style={{ color: "green" }}>{feedback}</p>
+            )}
 
             {error && (
                 <p style={{ color: "red" }}>{error}</p>
@@ -125,11 +71,14 @@ function ChatPanel() {
                     style={{ width: "100%", padding: "8px" }}
                 />
 
-                <button type="submit" style={{
-                    width: "100%",
-                    marginTop: "8px",
-                    padding: "8px",
-                }}>
+                <button
+                    type="submit"
+                    style={{
+                        width: "100%",
+                        marginTop: "8px",
+                        padding: "8px",
+                    }}
+                >
                     Send
                 </button>
             </form>

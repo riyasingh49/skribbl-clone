@@ -42,25 +42,57 @@ const registerChatHandlers = (io, socket, roomService, gameService) => {
                 const normalizedGuess = message.toLowerCase();
                 const normalizedWord = game.currentWord.trim().toLowerCase();
 
+
                 if (normalizedGuess === normalizedWord) {
                     if (game.correctGuessers.has(socket.id)) {
                         throw new Error("You have already guessed correctly");
                     }
 
+                    // Points based on guessing position.
+                    const pointsByPosition = [100, 80, 60, 40];
+                    const guessPosition = game.correctGuessers.size;
+                    const pointsEarned =
+                        pointsByPosition[Math.min(guessPosition, 3)];
+
+                    // Award points to the guesser.
+                    player.addPoints(pointsEarned);
                     game.correctGuessers.add(socket.id);
 
+                    // Award points to the drawer.
+                    const drawer = game.getCurrentDrawer();
+
+                    if (drawer) {
+                        drawer.addPoints(50);
+                    }
+
+                    // Broadcast updated scores.
+                    io.to(room.id).emit("scores-updated", {
+                        players: room.getPlayers().map((p) => ({
+                            id: p.id,
+                            username: p.username,
+                            score: p.score,
+                        })),
+                    });
+
+                    // Notify everyone.
                     io.to(room.id).emit("correct-guess", {
                         username: player.username,
                         word: game.currentWord,
                         playerId: socket.id,
+                        pointsEarned,
                     });
 
                     if (typeof callback === "function") {
-                        callback({ success: true, correct: true });
+                        callback({
+                            success: true,
+                            correct: true,
+                            pointsEarned,
+                        });
                     }
 
                     return;
                 }
+
             }
 
             const isGuessing =
