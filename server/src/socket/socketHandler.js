@@ -6,16 +6,20 @@ const registerGameHandlers = require("./gameHandlers");
 const registerDrawingHandlers = require("./drawingHandlers");
 const registerChatHandlers = require("./chatHandlers");
 
-// Shared service instances
 const roomService = new RoomService();
 const gameService = new GameService();
 
 const registerSocketHandlers = (io) => {
+
     io.on("connection", (socket) => {
         console.log("Player connected:", socket.id);
 
-        registerRoomHandlers(io, socket, roomService);
-        registerChatHandlers(io, socket, roomService, gameService);
+        registerRoomHandlers(
+            io,
+            socket,
+            roomService,
+            gameService
+        );
 
         registerGameHandlers(
             io,
@@ -31,9 +35,12 @@ const registerSocketHandlers = (io) => {
             gameService
         );
 
-        socket.on("disconnect", () => {
-            console.log("Player disconnected:", socket.id);
-        });
+        registerChatHandlers(
+            io,
+            socket,
+            roomService,
+            gameService
+        );
     });
 };
 
