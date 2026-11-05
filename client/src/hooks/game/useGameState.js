@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 const useGameState = () => {
     const [gameData, setGameData] = useState(null);
@@ -9,7 +9,8 @@ const useGameState = () => {
     const [gameFinished, setGameFinished] = useState(false);
     const [finishData, setFinishData] = useState(null);
 
-    const resetGame = () => {
+    // Reset all game-related state.
+    const resetGame = useCallback(() => {
         setGameData(null);
         setWordChoices([]);
         setMyWord(null);
@@ -17,7 +18,7 @@ const useGameState = () => {
         setIsChoosingWord(false);
         setGameFinished(false);
         setFinishData(null);
-    };
+    }, []);
 
     return {
         gameData,

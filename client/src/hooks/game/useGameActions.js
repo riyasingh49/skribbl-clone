@@ -35,11 +35,23 @@ const useGameActions = () => {
         socket.emit("get-game-state", callback);
     }, []);
 
+    // Allow the host to start the next turn.
+    const nextTurn = useCallback((onError) => {
+        socket.emit("next-turn", (response) => {
+            if (!response?.success) {
+                onError?.(
+                    response?.error || "Unable to start the next turn"
+                );
+            }
+        });
+    }, []);
+
     return {
         startGame,
         selectWord,
         requestHint,
-        requestGameState
+        requestGameState,
+        nextTurn
     };
 };
 

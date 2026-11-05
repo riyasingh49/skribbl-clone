@@ -36,9 +36,14 @@ const createGameEventHandlers = (state) => {
             }));
         },
 
-        onYourWord: (word) => {
-            setMyWord(word);
+        onYourWord: (data) => {
+            const word = typeof data === "string"
+                ? data
+                : data?.word;
+
+            setMyWord(word || null);
         },
+
 
         onTimerUpdate: (data) => {
             const time = typeof data === "number"

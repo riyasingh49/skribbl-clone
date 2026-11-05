@@ -6,7 +6,7 @@ const {
 
 const registerRoundHandler = (io, socket, roomService, gameService) => {
 
-    // Manually end the current round.
+    // Manually end the current drawing round.
     socket.on("end-round", (callback) => {
         try {
             const room = roomService.getRoomForSocket(socket.id);
@@ -51,7 +51,7 @@ const registerRoundHandler = (io, socket, roomService, gameService) => {
         }
     });
 
-    // Start the next turn.
+    // Start the next turn or finish the game.
     socket.on("next-turn", (callback) => {
         try {
             const room = roomService.getRoomForSocket(socket.id);
@@ -72,13 +72,15 @@ const registerRoundHandler = (io, socket, roomService, gameService) => {
 
             const gameState = game.nextTurn();
 
-            if (game.isGameFinished()) {
+            // Check the status directly on the Game instance.
+            if (game.roundStatus === "finished") {
                 broadcastGameFinished(io, room.id, game);
                 gameService.removeGame(room.id);
             } else {
                 sendWordChoices(io, game);
 
                 io.to(room.id).emit("next-turn-started", gameState);
+                broadcastGameState(io, room.id, game);
             }
 
             if (typeof callback === "function") {

@@ -14,9 +14,13 @@ function GameScreen({
     remainingTime = 0,
     onRequestHint,
     gameFinished = false,
-    finishData = null
+    finishData = null,
+    isHost = false,
+    onNextTurn
 }) {
-    if (!gameData) return <p>Waiting for game data...</p>;
+    if (!gameData) {
+        return <p>Waiting for game data...</p>;
+    }
 
     const isDrawer = socket.id === gameData.drawer?.id;
     const status = gameData.roundStatus;
@@ -57,7 +61,21 @@ function GameScreen({
             )}
 
             {status === "round-ended" && (
-                <RoundResult correctWord={gameData.correctWord} />
+                <div>
+                    <RoundResult
+                        correctWord={gameData.correctWord}
+                    />
+
+                    {isHost && (
+                        <button onClick={onNextTurn}>
+                            Next Turn
+                        </button>
+                    )}
+
+                    {!isHost && (
+                        <p>Waiting for the host to start the next turn...</p>
+                    )}
+                </div>
             )}
         </div>
     );

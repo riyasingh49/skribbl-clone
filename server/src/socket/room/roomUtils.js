@@ -8,7 +8,7 @@ const getPublicRoomData = (room) => {
         roomId: room.id,
         hostId: room.hostId,
 
-        players: room.getPlayers().map(player => ({
+        players: room.getPlayers().map((player) => ({
             id: player.id,
             username: player.username,
             score: player.score
@@ -49,12 +49,15 @@ const handlePlayerLeaving = (
 
     const game = gameService.getGame(roomId);
 
-    // Update game state before removing the player from the room.
+    // Determine whether this player is the current drawer
+    // before changing the game or room state.
+    const wasDrawer = game?.getCurrentDrawer()?.id === socket.id;
+
     if (game) {
         game.removePlayer(socket.id);
     }
 
-    // Remove player from room and transfer host if necessary.
+    // Remove the player and transfer host ownership if needed.
     const result = roomService.leaveRoom(socket.id);
 
     if (!result) {
@@ -63,14 +66,13 @@ const handlePlayerLeaving = (
 
     socket.leave(roomId);
 
-    // Notify remaining players.
     io.to(roomId).emit("player-left", {
         id: player.id,
         username: player.username
     });
 
     if (game) {
-        // End the game if fewer than two players remain.
+        // Finish the game when fewer than two players remain.
         if (room.getPlayerCount() < 2) {
             game.endGame();
 
@@ -84,8 +86,9 @@ const handlePlayerLeaving = (
             gameService.removeGame(roomId);
         }
 
-        // A replacement drawer needs fresh word choices.
+        // Only a departing drawer should trigger new word choices.
         else if (
+            wasDrawer &&
             game.roundStatus === "selecting-word" &&
             game.getCurrentDrawer()
         ) {
@@ -97,10 +100,12 @@ const handlePlayerLeaving = (
                     game.getGameState()
                 );
 
+                const newDrawer = game.getCurrentDrawer();
+
                 io.to(roomId).emit("drawer-changed", {
                     drawer: {
-                        id: game.getCurrentDrawer().id,
-                        username: game.getCurrentDrawer().username
+                        id: newDrawer.id,
+                        username: newDrawer.username
                     }
                 });
             } catch (error) {
@@ -111,7 +116,7 @@ const handlePlayerLeaving = (
             }
         }
 
-        // Notify players if the drawing round ended.
+        // Notify players if the round has already ended.
         else if (game.roundStatus === "round-ended") {
             io.to(roomId).emit("round-ended", {
                 reason: "drawer-left",
@@ -120,7 +125,7 @@ const handlePlayerLeaving = (
             });
         }
 
-        // Update game state for other departures.
+        // Update the public game state for other departures.
         else {
             io.to(roomId).emit(
                 "game-state-updated",
@@ -129,7 +134,6 @@ const handlePlayerLeaving = (
         }
     }
 
-    // Broadcast updated room information.
     if (room.getPlayerCount() > 0) {
         broadcastRoomUpdate(io, room);
     }

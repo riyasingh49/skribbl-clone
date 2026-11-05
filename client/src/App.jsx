@@ -8,183 +8,188 @@ import GameScreen from "./components/game/GameScreen";
 import ChatPanel from "./components/chat/ChatPanel";
 
 function App() {
-  const [username, setUsername] = useState("");
-  const [error, setError] = useState("");
+    const [username, setUsername] = useState("");
+    const [error, setError] = useState("");
 
-  const { connectionStatus } = useSocket();
+    const { connectionStatus } = useSocket();
 
-  const {
-    roomData,
-    setRoomData,
-    roomId,
-    setRoomId,
-    createRoom,
-    joinRoom,
-    leaveRoom
-  } = useRoom();
+    const {
+        roomData,
+        setRoomData,
+        roomId,
+        setRoomId,
+        createRoom,
+        joinRoom,
+        leaveRoom
+    } = useRoom();
 
-  const {
-    gameData,
-    setGameData,
-    wordChoices,
-    isChoosingWord,
-    startGame,
-    myWord,
-    remainingTime,
-    requestHint,
-    gameFinished,
-    selectWord,
-    finishData,
-    resetGame
-  } = useGame();
+    const {
+        gameData,
+        setGameData,
+        wordChoices,
+        isChoosingWord,
+        startGame,
+        myWord,
+        remainingTime,
+        requestHint,
+        gameFinished,
+        selectWord,
+        finishData,
+        resetGame,
+        nextTurn
+    } = useGame();
 
-  // Reset room and game state when disconnected.
-  useEffect(() => {
-    if (connectionStatus === "Disconnected") {
-      setRoomData(null);
-      setGameData(null);
-      resetGame();
-    }
-  }, [
-    connectionStatus,
-    setRoomData,
-    setGameData,
-    resetGame
-  ]);
+    useEffect(() => {
+        if (connectionStatus === "Disconnected") {
+            setRoomData(null);
+            setGameData(null);
+            resetGame();
+        }
+    }, [
+        connectionStatus,
+        setRoomData,
+        setGameData,
+        resetGame
+    ]);
 
-  const handleCreateRoom = () => {
-    setError("");
-    resetGame();
-    setGameData(null);
-    createRoom(username.trim(), setError);
-  };
+    const handleCreateRoom = () => {
+        setError("");
+        resetGame();
+        setGameData(null);
+        createRoom(username.trim(), setError);
+    };
 
-  const handleJoinRoom = () => {
-    setError("");
-    resetGame();
-    setGameData(null);
-    joinRoom(username.trim(), setError);
-  };
+    const handleJoinRoom = () => {
+        setError("");
+        resetGame();
+        setGameData(null);
+        joinRoom(username.trim(), setError);
+    };
 
-  const handleLeaveRoom = () => {
-    setError("");
+    const handleLeaveRoom = () => {
+        setError("");
 
-    leaveRoom(setError, () => {
-      setGameData(null);
-      resetGame();
-    });
-  };
+        leaveRoom(setError, () => {
+            setGameData(null);
+            resetGame();
+        });
+    };
 
-  const handleStartGame = () => {
-    setError("");
+    const handleStartGame = () => {
+        setError("");
+        startGame(setError);
+    };
 
-    startGame(setError);
-  };
+    const handleSelectWord = (word) => {
+        setError("");
+        selectWord(word, setError);
+    };
 
-  const handleSelectWord = (word) => {
-    setError("");
+    const handleNextTurn = () => {
+        setError("");
+        nextTurn(setError);
+    };
 
-    selectWord(word,setError);
-  };
+    return (
+        <div style={{ padding: "40px", fontFamily: "Arial" }}>
+            <h1>Skribbl Clone</h1>
 
-  return (
-    <div style={{ padding: "40px", fontFamily: "Arial" }}>
-      <h1>Skribbl Clone</h1>
+            <h3>Socket Status: {connectionStatus}</h3>
 
-      <h3>Socket Status: {connectionStatus}</h3>
+            {!roomData ? (
+                <div>
+                    <input
+                        type="text"
+                        placeholder="Enter username"
+                        value={username}
+                        onChange={(event) =>
+                            setUsername(event.target.value)
+                        }
+                    />
 
-      {!roomData ? (
-        <div>
-          <input
-            type="text"
-            placeholder="Enter username"
-            value={username}
-            onChange={(event) =>
-              setUsername(event.target.value)
-            }
-          />
+                    <br /><br />
 
-          <br /><br />
+                    <button
+                        onClick={handleCreateRoom}
+                        disabled={
+                            connectionStatus !== "Connected" ||
+                            !username.trim()
+                        }
+                    >
+                        Create Room
+                    </button>
 
-          <button
-            onClick={handleCreateRoom}
-            disabled={
-              connectionStatus !== "Connected" ||
-              !username.trim()
-            }
-          >
-            Create Room
-          </button>
+                    <br /><br />
 
-          <br /><br />
+                    <input
+                        type="text"
+                        placeholder="Enter room ID"
+                        value={roomId}
+                        onChange={(event) =>
+                            setRoomId(event.target.value.toUpperCase())
+                        }
+                    />
 
-          <input
-            type="text"
-            placeholder="Enter room ID"
-            value={roomId}
-            onChange={(event) =>
-              setRoomId(event.target.value.toUpperCase())
-            }
-          />
+                    <br /><br />
 
-          <br /><br />
+                    <button
+                        onClick={handleJoinRoom}
+                        disabled={
+                            connectionStatus !== "Connected" ||
+                            !username.trim() ||
+                            !roomId.trim()
+                        }
+                    >
+                        Join Room
+                    </button>
+                </div>
+            ) : (
+                <div>
+                    <h2>Room: {roomData.roomId || roomData.id}</h2>
 
-          <button
-            onClick={handleJoinRoom}
-            disabled={
-              connectionStatus !== "Connected" ||
-              !username.trim() ||
-              !roomId.trim()
-            }
-          >
-            Join Room
-          </button>
+                    <h3>Players</h3>
+
+                    {roomData.players.map((player) => (
+                        <p key={player.id}>
+                            {player.username} — Score: {player.score}
+                            {player.id === roomData.hostId && " (Host)"}
+                        </p>
+                    ))}
+
+                    {!gameData ? (
+                        <RoomLobby
+                            roomData={roomData}
+                            isHost={socket.id === roomData.hostId}
+                            onStartGame={handleStartGame}
+                            onLeaveRoom={handleLeaveRoom}
+                        />
+                    ) : (
+                        <GameScreen
+                            gameData={gameData}
+                            wordChoices={wordChoices}
+                            isChoosingWord={isChoosingWord}
+                            onSelectWord={handleSelectWord}
+                            myWord={myWord}
+                            remainingTime={remainingTime}
+                            onRequestHint={requestHint}
+                            gameFinished={gameFinished}
+                            finishData={finishData}
+                            isHost={socket.id === roomData.hostId}
+                            onNextTurn={handleNextTurn}
+                        />
+                    )}
+
+                    <ChatPanel />
+                </div>
+            )}
+
+            {error && (
+                <p style={{ color: "red" }}>
+                    {error}
+                </p>
+            )}
         </div>
-      ) : (
-        <div>
-          <h2>Room: {roomData.roomId || roomData.id}</h2>
-
-          <h3>Players</h3>
-
-          {roomData.players.map((player) => (
-            <p key={player.id}>
-              {player.username} — Score: {player.score}
-              {player.id === roomData.hostId && " (Host)"}
-            </p>
-          ))}
-
-          {!gameData ? (
-            <RoomLobby
-              roomData={roomData}
-              isHost={socket.id === roomData.hostId}
-              onStartGame={handleStartGame}
-              onLeaveRoom={handleLeaveRoom}
-            />
-          ) : (
-            <GameScreen
-              gameData={gameData}
-              wordChoices={wordChoices}
-              isChoosingWord={isChoosingWord}
-              onSelectWord={handleSelectWord}
-              myWord={myWord}
-              remainingTime={remainingTime}
-              onRequestHint={requestHint}
-              gameFinished={gameFinished}
-              finishData={finishData}
-            />
-          )}
-
-          <ChatPanel />
-        </div>
-      )}
-
-      {error && (
-        <p style={{ color: "red" }}>
-          {error}
-        </p>
-      )}
-    </div>
-  );
+    );
 }
 
 export default App;

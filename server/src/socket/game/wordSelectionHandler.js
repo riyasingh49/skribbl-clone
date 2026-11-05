@@ -1,7 +1,5 @@
 const { broadcastGameState } = require("./gameUtils");
-
 const registerWordSelectionHandler = (io, socket, roomService, gameService) => {
-
     socket.on("select-word", (data, callback) => {
         try {
             const room = roomService.getRoomForSocket(socket.id);
@@ -12,12 +10,15 @@ const registerWordSelectionHandler = (io, socket, roomService, gameService) => {
             if (!game) {
                 throw new Error("No active game found");
             }
-
             const drawer = game.getCurrentDrawer();
             if (!drawer || drawer.id !== socket.id) {
                 throw new Error("Only the current drawer can select a word");
             }
-            const result = game.setWord(data?.word);
+            // Validate the selected word and start the drawing round.
+            const selectedWord = data?.word;
+            game.setWord(selectedWord);
+
+            // Notify all players that drawing has started.
             io.to(room.id).emit("drawing-started", {
                 ...game.getGameState(),
                 drawer: {
@@ -26,12 +27,12 @@ const registerWordSelectionHandler = (io, socket, roomService, gameService) => {
                 }
             });
 
-            // Send secret word only to drawer.
+            // Send the secret word only to the drawer.
             io.to(drawer.id).emit("your-word", {
-                word: result.word
+                word: game.currentWord
             });
 
-            // Start drawing timer.
+            // Start the drawing timer.
             game.startTimer(
                 (remainingTime) => {
                     io.to(room.id).emit("timer-update", {
@@ -48,9 +49,11 @@ const registerWordSelectionHandler = (io, socket, roomService, gameService) => {
                     broadcastGameState(io, room.id, game);
                 }
             );
+
             if (typeof callback === "function") {
                 callback({ success: true });
             }
+
         } catch (error) {
             if (typeof callback === "function") {
                 callback({

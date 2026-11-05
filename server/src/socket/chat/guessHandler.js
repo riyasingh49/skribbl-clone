@@ -10,8 +10,14 @@ const handleGuess = (io, room, game, player, message) => {
         return { isGuess: false };
     }
 
+    const drawer = game.getCurrentDrawer();
+
+    if (!drawer) {
+        throw new Error("Current drawer not found");
+    }
+
     // Prevent the drawer from guessing.
-    if (game.getCurrentDrawer()?.id === player.id) {
+    if (drawer.id === player.id) {
         throw new Error("The drawer cannot guess their own word");
     }
 
@@ -26,7 +32,11 @@ const handleGuess = (io, room, game, player, message) => {
 
     // Check whether the guess is correct.
     if (normalizedGuess === normalizedWord) {
-        const result = game.recordCorrectGuess(player.id);
+        // Pass both the guesser's ID and the drawer's ID.
+        const result = game.recordCorrectGuess(
+            player.id,
+            drawer.id
+        );
 
         io.to(room.id).emit("correct-guess", {
             username: player.username,
