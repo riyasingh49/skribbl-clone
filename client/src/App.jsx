@@ -1,42 +1,69 @@
+import { useEffect, useState } from "react";
 import { socket } from "./socket/socket";
-import DrawingCanvas from "./components/drawing/DrawingCanvas";
-import ChatPanel from "./components/chat/ChatPanel";
 import useSocket from "./hooks/socket/useSocket";
+import useRoom from "./hooks/room/useRoom";
 import useGame from "./hooks/game/useGame";
 import RoomLobby from "./components/room/RoomLobby";
 import GameScreen from "./components/game/GameScreen";
+import ChatPanel from "./components/chat/ChatPanel";
 
 function App() {
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
 
   const { connectionStatus } = useSocket();
+
+  const {
+    roomData,
+    setRoomData,
+    roomId,
+    setRoomId,
+    createRoom,
+    joinRoom,
+    leaveRoom
+  } = useRoom();
+
   const {
     gameData,
     setGameData,
     wordChoices,
     isChoosingWord,
     startGame,
+    myWord,
+    remainingTime,
+    requestHint,
+    gameFinished,
     selectWord,
+    finishData,
+    resetGame
   } = useGame();
 
+  // Reset room and game state when disconnected.
   useEffect(() => {
     if (connectionStatus === "Disconnected") {
       setRoomData(null);
       setGameData(null);
+      resetGame();
     }
-  }, [connectionStatus]);
+  }, [
+    connectionStatus,
+    setRoomData,
+    setGameData,
+    resetGame
+  ]);
 
   const handleCreateRoom = () => {
     setError("");
+    resetGame();
     setGameData(null);
-    createRoom(username, setError);
+    createRoom(username.trim(), setError);
   };
 
   const handleJoinRoom = () => {
     setError("");
+    resetGame();
     setGameData(null);
-    joinRoom(username, setError);
+    joinRoom(username.trim(), setError);
   };
 
   const handleLeaveRoom = () => {
@@ -44,18 +71,20 @@ function App() {
 
     leaveRoom(setError, () => {
       setGameData(null);
+      resetGame();
     });
   };
 
-
   const handleStartGame = () => {
     setError("");
+
     startGame(setError);
   };
 
   const handleSelectWord = (word) => {
     setError("");
-    selectWord(word, setError);
+
+    selectWord(word);
   };
 
   return (
@@ -65,11 +94,14 @@ function App() {
       <h3>Socket Status: {connectionStatus}</h3>
 
       {!roomData ? (
-        <>
+        <div>
           <input
+            type="text"
             placeholder="Enter username"
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(event) =>
+              setUsername(event.target.value)
+            }
           />
 
           <br /><br />
@@ -87,9 +119,12 @@ function App() {
           <br /><br />
 
           <input
+            type="text"
             placeholder="Enter room ID"
             value={roomId}
-            onChange={(e) => setRoomId(e.target.value)}
+            onChange={(event) =>
+              setRoomId(event.target.value.toUpperCase())
+            }
           />
 
           <br /><br />
@@ -104,9 +139,13 @@ function App() {
           >
             Join Room
           </button>
-        </>
+        </div>
       ) : (
-        <>
+        <div>
+          <h2>Room: {roomData.roomId || roomData.id}</h2>
+
+          <h3>Players</h3>
+
           {roomData.players.map((player) => (
             <p key={player.id}>
               {player.username} — Score: {player.score}
@@ -115,29 +154,28 @@ function App() {
           ))}
 
           {!gameData ? (
-            <>
-
-              <RoomLobby
-                roomData={roomData}
-                isHost={socket.id === roomData.hostId}
-                onStartGame={handleStartGame}
-                onLeaveRoom={handleLeaveRoom}
-              />
-
-            </>
+            <RoomLobby
+              roomData={roomData}
+              isHost={socket.id === roomData.hostId}
+              onStartGame={handleStartGame}
+              onLeaveRoom={handleLeaveRoom}
+            />
           ) : (
-            <div>
-              <GameScreen
-                gameData={gameData}
-                wordChoices={wordChoices}
-                isChoosingWord={isChoosingWord}
-                onSelectWord={handleSelectWord}
-              />
-            </div>
+            <GameScreen
+              gameData={gameData}
+              wordChoices={wordChoices}
+              isChoosingWord={isChoosingWord}
+              onSelectWord={handleSelectWord}
+              myWord={myWord}
+              remainingTime={remainingTime}
+              onRequestHint={requestHint}
+              gameFinished={gameFinished}
+              finishData={finishData}
+            />
           )}
-          {/* Room Chat */}
+
           <ChatPanel />
-        </>
+        </div>
       )}
 
       {error && (

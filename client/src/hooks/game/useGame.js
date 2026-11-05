@@ -1,77 +1,37 @@
-import { useState, useEffect, useCallback } from "react";
-import { socket } from "../../socket/socket";
+import { useMemo } from "react";
 
-function useGame() {
-    const [gameData, setGameData] = useState(null);
-    const [wordChoices, setWordChoices] = useState([]);
-    const [isChoosingWord, setIsChoosingWord] = useState(false);
+import useGameState from "./useGameState";
+import useGameEvents from "./useGameEvents";
+import useGameActions from "./useGameActions";
+import createGameEventHandlers from "./gameEventHandlers";
 
-    useEffect(() => {
-        const handleGameStarted = (game) => {
-            console.log("Game started:", game);
-            setGameData(game);
-        };
+const useGame = () => {
+    const gameState = useGameState();
 
-        const handleWordChoices = (choices) => {
-            setWordChoices(choices);
-            setIsChoosingWord(true);
-        };
+    // Create stable event handlers.
+    const eventHandlers = useMemo(
+        () => createGameEventHandlers(gameState),
+        [
+            gameState.setGameData,
+            gameState.setWordChoices,
+            gameState.setMyWord,
+            gameState.setRemainingTime,
+            gameState.setIsChoosingWord,
+            gameState.setGameFinished,
+            gameState.setFinishData
+        ]
+    );
 
-        const handleDrawingStarted = (data) => {
-            setGameData((previous) => ({
-                ...previous,
-                ...data,
-                drawer: data.drawer,
-            }));
+    // Register incoming socket events.
+    useGameEvents(eventHandlers);
 
-            setIsChoosingWord(false);
-            setWordChoices([]);
-        };
-
-        const handleYourWord = (data) => {
-            console.log("Your selected word:", data.word);
-        };
-
-        socket.on("game-started", handleGameStarted);
-        socket.on("word-choices", handleWordChoices);
-        socket.on("drawing-started", handleDrawingStarted);
-        socket.on("your-word", handleYourWord);
-
-        return () => {
-            socket.off("game-started", handleGameStarted);
-            socket.off("word-choices", handleWordChoices);
-            socket.off("drawing-started", handleDrawingStarted);
-            socket.off("your-word", handleYourWord);
-        };
-    }, []);
-
-    const startGame = useCallback((onError) => {
-        socket.emit("start-game", (response) => {
-            if (!response?.success) {
-                onError(response?.error || "Could not start the game");
-            }
-        });
-    }, []);
-
-    const selectWord = useCallback((word, onError) => {
-        socket.emit("select-word", { word }, (response) => {
-            if (response?.success) {
-                setIsChoosingWord(false);
-                setWordChoices([]);
-            } else {
-                onError(response?.error || "Could not select that word");
-            }
-        });
-    }, []);
+    // Get outgoing game actions.
+    const gameActions = useGameActions();
 
     return {
-        gameData,
-        setGameData,
-        wordChoices,
-        isChoosingWord,
-        startGame,
-        selectWord,
+        ...gameState,
+        ...gameActions
     };
-}
+};
 
 export default useGame;

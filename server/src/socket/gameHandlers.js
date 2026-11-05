@@ -27,6 +27,7 @@ const registerGameHandlers = (io, socket, roomService, gameService) => {
     );
 
     registerGameStateHandler(
+        io,
         socket,
         roomService,
         gameService

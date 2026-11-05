@@ -1,13 +1,19 @@
+const {
+    sendWordChoices
+} = require("../game/gameUtils");
+
 const getPublicRoomData = (room) => {
     return {
         id: room.id,
         roomId: room.id,
         hostId: room.hostId,
+
         players: room.getPlayers().map(player => ({
             id: player.id,
             username: player.username,
             score: player.score
         })),
+
         playerCount: room.getPlayerCount(),
         settings: { ...room.settings }
     };
@@ -20,7 +26,6 @@ const broadcastRoomUpdate = (io, room) => {
     );
 };
 
-// Shared cleanup for voluntary leaves and unexpected disconnects.
 const handlePlayerLeaving = (
     io,
     socket,
@@ -38,17 +43,18 @@ const handlePlayerLeaving = (
 
     if (!player) {
         roomService.leaveRoom(socket.id);
+        socket.leave(roomId);
         return null;
     }
 
     const game = gameService.getGame(roomId);
 
-    // Remove the player from the game before removing them from the room.
-    // This lets Game identify whether the departing player was drawing.
+    // Update game state before removing the player from the room.
     if (game) {
         game.removePlayer(socket.id);
     }
 
+    // Remove player from room and transfer host if necessary.
     const result = roomService.leaveRoom(socket.id);
 
     if (!result) {
@@ -57,34 +63,73 @@ const handlePlayerLeaving = (
 
     socket.leave(roomId);
 
+    // Notify remaining players.
     io.to(roomId).emit("player-left", {
         id: player.id,
         username: player.username
     });
 
-    if (game && room.getPlayerCount() < 2) {
-        game.endGame();
+    if (game) {
+        // End the game if fewer than two players remain.
+        if (room.getPlayerCount() < 2) {
+            game.endGame();
 
-        io.to(roomId).emit("game-finished", {
-            winner: game.getWinner(),
-            leaderboard: game.getLeaderboard(),
-            reason: "not-enough-players"
-        });
+            io.to(roomId).emit("game-finished", {
+                winner: game.getWinner(),
+                leaderboard: game.getLeaderboard(),
+                gameState: game.getGameState(),
+                reason: "not-enough-players"
+            });
 
-        gameService.removeGame(roomId);
-    } else if (game && game.roundStatus === "round-ended") {
-        io.to(roomId).emit("round-ended", {
-            reason: "drawer-left",
-            leaderboard: game.getLeaderboard()
-        });
+            gameService.removeGame(roomId);
+        }
 
-        io.to(roomId).emit(
-            "game-state-updated",
-            game.getGameState()
-        );
+        // A replacement drawer needs fresh word choices.
+        else if (
+            game.roundStatus === "selecting-word" &&
+            game.getCurrentDrawer()
+        ) {
+            try {
+                sendWordChoices(io, game);
+
+                io.to(roomId).emit(
+                    "game-state-updated",
+                    game.getGameState()
+                );
+
+                io.to(roomId).emit("drawer-changed", {
+                    drawer: {
+                        id: game.getCurrentDrawer().id,
+                        username: game.getCurrentDrawer().username
+                    }
+                });
+            } catch (error) {
+                console.error(
+                    "Failed to prepare replacement drawer:",
+                    error.message
+                );
+            }
+        }
+
+        // Notify players if the drawing round ended.
+        else if (game.roundStatus === "round-ended") {
+            io.to(roomId).emit("round-ended", {
+                reason: "drawer-left",
+                leaderboard: game.getLeaderboard(),
+                gameState: game.getGameState()
+            });
+        }
+
+        // Update game state for other departures.
+        else {
+            io.to(roomId).emit(
+                "game-state-updated",
+                game.getGameState()
+            );
+        }
     }
 
-    // An empty room has already been deleted by RoomService.
+    // Broadcast updated room information.
     if (room.getPlayerCount() > 0) {
         broadcastRoomUpdate(io, room);
     }
