@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { socket } from "./socket/socket";
 import DrawingCanvas from "./components/drawing/DrawingCanvas";
+import ChatPanel from "./components/chat/ChatPanel";
 
 function App() {
   const [connectionStatus, setConnectionStatus] = useState("Disconnected");
@@ -281,6 +282,8 @@ function App() {
               )}
             </div>
           )}
+          {/* Room Chat */}
+          <ChatPanel />
         </>
       )}
 

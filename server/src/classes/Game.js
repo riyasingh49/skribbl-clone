@@ -1,8 +1,6 @@
 class Game {
     constructor(room) {
         this.room = room;
-        
-
         // Game configuration comes from the Room
         this.totalRounds = room.settings.totalRounds;
 
@@ -12,6 +10,7 @@ class Game {
         this.currentWord = null;
         this.wordChoices = [];
         this.roundStatus = "waiting";
+        this.correctGuessers = new Set();
 
         // Preserve the order in which players joined
         this.playerOrder = room.getPlayers().map(
@@ -38,6 +37,7 @@ class Game {
         this.currentWord = null;
         this.wordChoices = [];
         this.roundStatus = "selecting-word";
+        this.correctGuessers.clear();
     }
 
     getCurrentDrawer() {

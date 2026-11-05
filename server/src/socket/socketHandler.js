@@ -4,6 +4,7 @@ const GameService = require("../services/GameService");
 const registerRoomHandlers = require("./roomHandlers");
 const registerGameHandlers = require("./gameHandlers");
 const registerDrawingHandlers = require("./drawingHandlers");
+const registerChatHandlers = require("./chatHandlers");
 
 // Shared service instances
 const roomService = new RoomService();
@@ -14,6 +15,7 @@ const registerSocketHandlers = (io) => {
         console.log("Player connected:", socket.id);
 
         registerRoomHandlers(io, socket, roomService);
+        registerChatHandlers(io, socket, roomService, gameService);
 
         registerGameHandlers(
             io,
