@@ -84,7 +84,7 @@ function App() {
   const handleSelectWord = (word) => {
     setError("");
 
-    selectWord(word);
+    selectWord(word,setError);
   };
 
   return (

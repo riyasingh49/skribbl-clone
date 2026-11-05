@@ -1,5 +1,9 @@
 import { socket } from "../../socket/socket";
-import DrawingCanvas from "../drawing/DrawingCanvas";
+import GameHeader from "./GameHeader";
+import WordSelection from "./WordSelection";
+import DrawingRound from "./DrawingRound";
+import RoundResult from "./RoundResult";
+import GameResults from "./GameResults";
 
 function GameScreen({
     gameData,
@@ -12,115 +16,48 @@ function GameScreen({
     gameFinished = false,
     finishData = null
 }) {
-    if (!gameData) {
-        return <p>Waiting for game data...</p>;
-    }
+    if (!gameData) return <p>Waiting for game data...</p>;
 
     const isDrawer = socket.id === gameData.drawer?.id;
-    const roundStatus = gameData.roundStatus;
+    const status = gameData.roundStatus;
 
-    if (gameFinished || roundStatus === "finished") {
-        const leaderboard =
-            finishData?.leaderboard || gameData.leaderboard || [];
-
+    if (gameFinished || status === "finished") {
         return (
-            <div>
-                <h2>Game Finished!</h2>
-
-                <h3>
-                    Winner:{" "}
-                    {finishData?.winner?.username || "No winner"}
-                </h3>
-
-                <h3>Final Leaderboard</h3>
-
-                {leaderboard.map((player, index) => (
-                    <p key={player.id}>
-                        {index + 1}. {player.username} - {player.score} points
-                    </p>
-                ))}
-            </div>
+            <GameResults
+                winner={finishData?.winner}
+                leaderboard={
+                    finishData?.leaderboard || gameData.leaderboard
+                }
+            />
         );
     }
 
     return (
         <div>
-            <h2>Skribbl Game</h2>
+            <GameHeader gameData={gameData} />
 
-            <p>
-                Round: {gameData.currentRound} / {gameData.totalRounds}
-            </p>
+            <WordSelection
+                isDrawer={isDrawer}
+                isChoosingWord={
+                    isChoosingWord && status === "selecting-word"
+                }
+                wordChoices={wordChoices}
+                drawerName={gameData.drawer?.username}
+                onSelectWord={onSelectWord}
+            />
 
-            <p>
-                Current Drawer:{" "}
-                {gameData.drawer?.username || "Unknown"}
-            </p>
-
-            {roundStatus === "drawing" && (
-                <div>
-                    <h3>
-                        Time Remaining: {remainingTime} seconds
-                    </h3>
-
-                    {isDrawer ? (
-                        <h3>Your Word: {myWord || "Loading..."}</h3>
-                    ) : (
-                        <>
-                            <h3>Guess the word!</h3>
-
-                            <p>
-                                Hint: {gameData.hint || "Waiting for hint..."}
-                            </p>
-
-                            <button onClick={onRequestHint}>
-                                Request Hint
-                            </button>
-                        </>
-                    )}
-                </div>
+            {status === "drawing" && (
+                <DrawingRound
+                    isDrawer={isDrawer}
+                    myWord={myWord}
+                    remainingTime={remainingTime}
+                    hint={gameData.hint}
+                    onRequestHint={onRequestHint}
+                />
             )}
 
-            {isChoosingWord && roundStatus === "selecting-word" && (
-                <div>
-                    {isDrawer ? (
-                        <>
-                            <h3>Choose a word to draw:</h3>
-
-                            {wordChoices.map((word) => (
-                                <button
-                                    key={word}
-                                    onClick={() => onSelectWord?.(word)}
-                                >
-                                    {word}
-                                </button>
-                            ))}
-                        </>
-                    ) : (
-                        <h3>
-                            {gameData.drawer?.username} is choosing a word...
-                        </h3>
-                    )}
-                </div>
-            )}
-
-            {roundStatus === "drawing" && (
-                <div>
-                    <h3>Drawing Area</h3>
-
-                    <DrawingCanvas canDraw={isDrawer} />
-                </div>
-            )}
-
-            {roundStatus === "round-ended" && (
-                <div>
-                    <h3>Round Finished!</h3>
-
-                    {gameData.correctWord && (
-                        <p>
-                            Correct Word: {gameData.correctWord}
-                        </p>
-                    )}
-                </div>
+            {status === "round-ended" && (
+                <RoundResult correctWord={gameData.correctWord} />
             )}
         </div>
     );

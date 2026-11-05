@@ -5,16 +5,25 @@ const useGameActions = () => {
     const startGame = useCallback((onError) => {
         socket.emit("start-game", (response) => {
             if (!response?.success) {
-                onError?.(response?.message || "Unable to start the game");
+                onError?.(
+                    response?.error || "Unable to start the game"
+                );
             }
         });
     }, []);
 
-    const selectWord = useCallback((word) => {
-        if (typeof word !== "string" || !word.trim()) return;
+    const selectWord = useCallback((word, onError) => {
+        if (typeof word !== "string" || !word.trim()) {
+            onError?.("Please select a valid word");
+            return;
+        }
 
-        socket.emit("select-word", {
-            word: word.trim()
+        socket.emit("select-word", { word: word.trim() }, (response) => {
+            if (!response?.success) {
+                onError?.(
+                    response?.error || "Unable to select the word"
+                );
+            }
         });
     }, []);
 
