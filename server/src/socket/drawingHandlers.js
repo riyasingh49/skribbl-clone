@@ -11,8 +11,13 @@ const registerDrawingHandlers = (io, socket, roomService, gameService) => {
             if (!currentDrawer || currentDrawer.id !== socket.id) {
                 return;
             }
-            const { from, to, color, lineWidth } = data || {};
+            const { from, to, color, lineWidth, strokeId } = data || {};  
+            
             // Validate coordinates
+
+            if (typeof strokeId !== "string" || !strokeId) {
+                return;
+            }
             if (
                 !from ||
                 !to ||
@@ -40,7 +45,8 @@ const registerDrawingHandlers = (io, socket, roomService, gameService) => {
                 from,
                 to,
                 color,
-                lineWidth
+                lineWidth,
+                strokeId
             });
 
         } catch (error) {
@@ -48,19 +54,35 @@ const registerDrawingHandlers = (io, socket, roomService, gameService) => {
         }
     });
 
-    socket.on("undo-drawing", () => {
+    socket.on("undo-drawing", (data) => {
         const room = roomService.getRoomForSocket(socket.id);
         if (!room) return;
     
         const game = gameService.getGame(room.id);
+        if (!game || game.roundStatus !== "drawing") return;
     
+        const currentDrawer = game.getCurrentDrawer();
+        if (!currentDrawer || currentDrawer.id !== socket.id) return;
+    
+        const { strokeId } = data || {};
+    
+        if (typeof strokeId !== "string" || !strokeId) return;
+    
+        socket.to(room.id).emit("undo-drawing", { strokeId });
+    });
+
+    socket.on("clear-canvas", () => {
+        const room = roomService.getRoomForSocket(socket.id);
+        if (!room) return;
+    
+        const game = gameService.getGame(room.id);
         if (!game || game.roundStatus !== "drawing") return;
     
         const currentDrawer = game.getCurrentDrawer();
     
         if (!currentDrawer || currentDrawer.id !== socket.id) return;
     
-        socket.to(room.id).emit("undo-drawing");
+        socket.to(room.id).emit("clear-canvas");
     });
 };
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import useDrawing from "../../hooks/useDrawing";
+import useDrawing from "../../hooks/drawing/useDrawing";
 
 import ColorPicker from "./ColorPicker";
 import BrushSizePicker from "./BrushSizePicker";
@@ -9,11 +9,13 @@ function DrawingCanvas({ canDraw }) {
     const {
         canvasRef,
         lastPointRef,
+        startStroke,
+        finishStroke,
         addStroke,
         undo,
         clearCanvas,
         getCanvasPoint,
-    } = useDrawing();
+    } = useDrawing({ canDraw });
 
     const [selectedColor, setSelectedColor] = useState("#222222");
     const [brushSize, setBrushSize] = useState(4);
@@ -36,33 +38,31 @@ function DrawingCanvas({ canDraw }) {
 
     const handlePointerDown = (event) => {
         if (!canDraw) return;
-
+    
         const canvas = canvasRef.current;
-
         canvas.setPointerCapture(event.pointerId);
+        startStroke();
         lastPointRef.current = getCanvasPoint(event);
     };
-
+    
     const handlePointerMove = (event) => {
         if (!canDraw || !lastPointRef.current) return;
-
         const currentPoint = getCanvasPoint(event);
         const previousPoint = lastPointRef.current;
-
         const stroke = {
             from: previousPoint,
             to: currentPoint,
             color: isErasing ? "#FFFFFF" : selectedColor,
             lineWidth: brushSize,
         };
-
+    
         addStroke(stroke);
-
+    
         lastPointRef.current = currentPoint;
     };
-
+    
     const handlePointerUp = () => {
-        lastPointRef.current = null;
+        finishStroke();
     };
 
     return (
