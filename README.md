@@ -1,176 +1,119 @@
+# Skribbl.io Clone
 
-# Skribbl.io Clone – Real-Time Multiplayer Drawing Game
-
-A real-time multiplayer drawing and guessing game inspired by Skribbl.io. Players join game rooms, take turns drawing a secret word, and compete to guess the correct word to earn points.
+A real-time multiplayer drawing and guessing game inspired by Skribbl.io. Players can create or join rooms, take turns drawing secret words, and guess what other players are drawing through live chat.
 
 ## Features
 
-- Create and join multiplayer game rooms.
-- Public and password-protected private rooms.
-- Configurable player capacity, rounds, and drawing time.
-- Host-controlled game start, round ending, and next turns.
-- Random word selection for each drawing round.
-- Real-time drawing synchronization using Socket.IO.
-- Drawing tools: multiple colors, brush sizes, eraser, undo, and clear canvas.
-- Real-time chat and word guessing.
-- Hint system for players.
-- Countdown timer for drawing rounds.
-- Player scoring and leaderboard.
-- Automatic round and game completion.
+- Create and join multiplayer rooms.
+- Real-time drawing using a shared canvas.
+- Multiple word choices for each drawing turn.
+- Live chat and word guessing.
+- Automatic correct-guess detection.
+- Round timers and scoring system.
+- Player leaderboard and game results.
+- Host controls for ending rounds and starting the next turn.
+- Player disconnection handling.
+- Drawing tools, colors, brush sizes, and eraser.
+- Responsive game interface.
 
-## Technology Stack
+## Tech Stack
 
-### Frontend
+**Frontend**
 - React
 - Vite
-- JavaScript
-- HTML5 Canvas
-- CSS
+- Tailwind CSS
+- Socket.IO Client
 
-### Backend
+**Backend**
 - Node.js
-- Express.js
+- Express
 - Socket.IO
-
-### Communication
-- WebSockets through Socket.IO for real-time multiplayer events.
 
 ## Project Structure
 
 ```text
-skribble-clone/
+skribbl-clone/
 ├── client/
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── chat/
-│   │   │   ├── common/
-│   │   │   ├── drawing/
-│   │   │   ├── game/
-│   │   │   └── room/
 │   │   ├── hooks/
-│   │   │   ├── chat/
-│   │   │   ├── drawing/
-│   │   │   ├── game/
-│   │   │   ├── room/
-│   │   │   └── socket/
-│   │   ├── socket/
 │   │   └── App.jsx
 │   └── package.json
 │
 ├── server/
 │   ├── src/
 │   │   ├── classes/
-│   │   ├── config/
-│   │   ├── controllers/
-│   │   ├── data/
-│   │   ├── routes/
 │   │   ├── services/
-│   │   ├── socket/
-│   │   ├── utils/
-│   │   └── server.js
+│   │   └── socket/
 │   └── package.json
 │
 └── README.md
 ```
 
-## Installation and Setup
+## Installation
 
-### Prerequisites
-- Node.js
-- npm
-- Git
-
-### 1. Clone the repository
+Clone the repository:
 
 ```bash
 git clone https://github.com/riyasingh49/skribbl-clone.git
 cd skribbl-clone
 ```
 
-### 2. Install backend dependencies
-
-```bash
-cd server
-npm install
-```
-
-### 3. Configure backend environment
-
-Create a `.env` file inside the `server` directory:
-
-```env
-PORT=5001
-CLIENT_URL=http://localhost:5173
-```
-
-### 4. Start the backend
-
-```bash
-npm run dev
-```
-
-### 5. Install frontend dependencies
-
-Open another terminal:
+Install frontend dependencies:
 
 ```bash
 cd client
 npm install
 ```
 
-### 6. Start the frontend
+Install backend dependencies:
 
 ```bash
+cd ../server
+npm install
+```
+
+## Running the Application
+
+Start the backend using its configured start script:
+
+```bash
+cd server
+npm start
+```
+
+Start the frontend in another terminal:
+
+```bash
+cd client
 npm run dev
 ```
 
-Open the local URL displayed by Vite, normally:
-
-http://localhost:5173
+Open the local URL displayed by Vite in your browser.
 
 ## How to Play
 
-1. Enter a username.
-2. Create a room or join an existing room using its room ID.
-3. The room host configures the game settings.
-4. The host starts the game when at least two players have joined.
-5. The drawer selects a secret word.
-6. The drawer sketches the word using the drawing tools.
-7. Other players submit guesses through chat.
-8. Correct guesses earn points.
-9. Players take turns drawing until all rounds are complete.
-10. The final leaderboard displays the game results.
+1. Create a room or join an existing room.
+2. Wait for at least two players.
+3. The drawer selects one of the available words.
+4. The drawer illustrates the selected word on the canvas.
+5. Other players submit guesses through chat.
+6. Players earn points for correct guesses.
+7. The host can end a round and start the next turn.
+8. The game displays the leaderboard and final results.
 
-## Architecture Overview
+## Deployment
 
-The application uses a client-server architecture.
+The frontend can be deployed on Vercel and the Socket.IO backend on Render.
 
-- **React frontend:** Displays the lobby, drawing canvas, chat, game controls, and leaderboard.
-- **Express backend:** Hosts the application server and API routes.
-- **Socket.IO:** Handles real-time room events, drawing updates, chat messages, guesses, and game-state changes.
-- **Game classes and services:** Manage rooms, players, rounds, scoring, hints, timers, and player departures.
-- **Custom React hooks:** Separate frontend logic for drawing, rooms, chat, socket communication, and game state.
+Configure the frontend to connect to the deployed backend URL. Configure the backend to accept the deployed frontend origin through CORS and support WebSocket connections.
 
-## Object-Oriented Design
-
-The backend uses classes and service modules to organize game functionality.
-
-- `Player`: Represents an individual player.
-- `Room`: Manages room membership, host information, and room settings.
-- `Game`: Manages the game lifecycle and current round.
-- `RoundManager`: Controls round progression.
-- `ScoreManager`: Handles player scoring.
-- `HintManager`: Manages word hints.
-- `TimerManager`: Controls drawing timers.
-
-## Future Improvements
-
-- Add persistent player accounts.
-- Add more drawing tools and shapes.
-- Improve mobile responsiveness.
-- Deploy the application for online multiplayer access.
-- Add additional game themes and word categories.
+Set all required environment variables in the hosting dashboards. Never commit secrets or private credentials to GitHub.
 
 ## Author
 
-Made by Riya Singh.
+Riya Singh
+
+## Repository
+
+https://github.com/riyasingh49/skribbl-clone

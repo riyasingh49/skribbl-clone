@@ -5,12 +5,18 @@ class PlayerDepartureManager {
 
     removePlayer(playerId) {
         const game = this.game;
-        const currentDrawer = game.getCurrentDrawer();
-        const wasDrawer = currentDrawer?.id === playerId;
+        const roundManager = game.roundManager;
+
+        // Find the drawer from the drawing order. The player may
+        // already have been removed from room.players.
+        const currentDrawerId =
+            roundManager.playerOrder[roundManager.currentDrawerIndex];
+
+        const wasDrawer = currentDrawerId === playerId;
         const previousStatus = game.roundStatus;
 
         // Remove the player from the drawing order.
-        game.roundManager.removePlayer(playerId);
+        roundManager.removePlayer(playerId);
 
         // End the game if fewer than two players remain.
         if (game.room.getPlayerCount() < 2) {
@@ -23,8 +29,7 @@ class PlayerDepartureManager {
             return game.getGameState();
         }
 
-        // If the round is already over, do not start another
-        // drawer-selection phase just because the drawer left.
+        // Do not restart a round that has already ended.
         if (
             previousStatus !== "drawing" &&
             previousStatus !== "selecting-word"
@@ -32,11 +37,12 @@ class PlayerDepartureManager {
             return game.getGameState();
         }
 
-        // Stop the timer and clear the previous round's data.
+        // Stop the timer and clear the previous secret word,
+        // word choices, hints and round-specific scores.
         game.resetRoundData();
 
-        // Prepare the next available drawer.
-        const state = game.roundManager.handleDrawerDeparture();
+        // The next available player becomes the drawer.
+        const state = roundManager.handleDrawerDeparture();
 
         game.roundStatus = state.roundStatus;
 

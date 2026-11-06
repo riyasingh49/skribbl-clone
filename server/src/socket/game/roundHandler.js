@@ -5,8 +5,6 @@ const {
 } = require("./gameUtils");
 
 const registerRoundHandler = (io, socket, roomService, gameService) => {
-
-    // Manually end the current drawing round.
     socket.on("end-round", (callback) => {
         try {
             const room = roomService.getRoomForSocket(socket.id);
@@ -40,7 +38,6 @@ const registerRoundHandler = (io, socket, roomService, gameService) => {
             if (typeof callback === "function") {
                 callback({ success: true });
             }
-
         } catch (error) {
             if (typeof callback === "function") {
                 callback({
@@ -51,7 +48,6 @@ const registerRoundHandler = (io, socket, roomService, gameService) => {
         }
     });
 
-    // Start the next turn or finish the game.
     socket.on("next-turn", (callback) => {
         try {
             const room = roomService.getRoomForSocket(socket.id);
@@ -72,15 +68,18 @@ const registerRoundHandler = (io, socket, roomService, gameService) => {
 
             const gameState = game.nextTurn();
 
-            // Check the status directly on the Game instance.
             if (game.roundStatus === "finished") {
                 broadcastGameFinished(io, room.id, game);
                 gameService.removeGame(room.id);
             } else {
-                sendWordChoices(io, game);
-
+                // First update the game screen for every player.
                 io.to(room.id).emit("next-turn-started", gameState);
+
                 broadcastGameState(io, room.id, game);
+
+                // Send choices LAST so the next drawer's choices
+                // are not cleared by the next-turn event handler.
+                sendWordChoices(io, game);
             }
 
             if (typeof callback === "function") {
@@ -89,7 +88,6 @@ const registerRoundHandler = (io, socket, roomService, gameService) => {
                     game: gameState
                 });
             }
-
         } catch (error) {
             if (typeof callback === "function") {
                 callback({
