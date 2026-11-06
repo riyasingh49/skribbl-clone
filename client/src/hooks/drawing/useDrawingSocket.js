@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback } from "react";
 import { socket } from "../../socket/socket";
 
@@ -11,7 +10,7 @@ function useDrawingSocket({
     redrawCanvas,
     canDraw
 }) {
-    // Convert frontend drawing data into the backend format.
+    // Send drawing data to the server.
     const emitDrawing = useCallback((stroke) => {
         if (!canDraw) return;
 
@@ -22,27 +21,28 @@ function useDrawingSocket({
             toY: stroke.to.y,
             color: stroke.color,
             width: stroke.lineWidth,
-            strokeId: stroke.strokeId
+            strokeId: stroke.strokeId,
+            isErasing: Boolean(stroke.isErasing)
         });
     }, [canDraw]);
 
-    // Send an undo event to other players.
     const emitUndo = useCallback((strokeId) => {
         if (!canDraw || !strokeId) return;
 
         socket.emit("undo-drawing", { strokeId });
     }, [canDraw]);
 
-    // Send a clear-canvas event to other players.
     const emitClear = useCallback(() => {
         if (!canDraw) return;
 
         socket.emit("clear-canvas");
     }, [canDraw]);
 
-    // Listen for drawing events from other players.
+    // Receive drawing data from other players.
     useEffect(() => {
         const handleRemoteDrawing = (data) => {
+            if (!data) return;
+
             const stroke = {
                 from: {
                     x: data.fromX,
@@ -54,7 +54,8 @@ function useDrawingSocket({
                 },
                 color: data.color,
                 lineWidth: data.width,
-                strokeId: data.strokeId
+                strokeId: data.strokeId,
+                isErasing: Boolean(data.isErasing)
             };
 
             addStroke(stroke);
@@ -63,7 +64,8 @@ function useDrawingSocket({
                 stroke.from,
                 stroke.to,
                 stroke.color,
-                stroke.lineWidth
+                stroke.lineWidth,
+                stroke.isErasing
             );
         };
 

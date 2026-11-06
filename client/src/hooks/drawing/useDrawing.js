@@ -8,14 +8,12 @@ function useDrawing({ canDraw = false } = {}) {
     const lastPointRef = useRef(null);
     const activeStrokeIdRef = useRef(null);
 
-    // Canvas rendering operations
     const {
         drawLine,
         redrawCanvas,
         clearCanvas: clearCanvasDisplay
     } = useCanvas(canvasRef);
 
-    // Drawing history operations
     const {
         addStroke: saveStroke,
         undo: undoHistory,
@@ -24,7 +22,6 @@ function useDrawing({ canDraw = false } = {}) {
         getStrokes
     } = useDrawingHistory();
 
-    // Multiplayer drawing communication
     const {
         emitDrawing,
         emitUndo,
@@ -39,25 +36,23 @@ function useDrawing({ canDraw = false } = {}) {
         canDraw
     });
 
-    // Start one complete mouse/touch gesture
     const startStroke = () => {
         if (!canDraw) return;
 
         activeStrokeIdRef.current = crypto.randomUUID();
     };
 
-    // Finish the current gesture
     const finishStroke = () => {
         activeStrokeIdRef.current = null;
         lastPointRef.current = null;
     };
 
-    // Save, draw and broadcast one line segment
     const addStroke = (stroke) => {
         if (!canDraw || !activeStrokeIdRef.current) return;
 
         const completeStroke = {
             ...stroke,
+            isErasing: Boolean(stroke.isErasing),
             strokeId: activeStrokeIdRef.current
         };
 
@@ -67,13 +62,13 @@ function useDrawing({ canDraw = false } = {}) {
             completeStroke.from,
             completeStroke.to,
             completeStroke.color,
-            completeStroke.lineWidth
+            completeStroke.lineWidth,
+            completeStroke.isErasing
         );
 
         emitDrawing(completeStroke);
     };
 
-    // Undo the complete most recent gesture
     const undo = () => {
         if (!canDraw) return;
 
@@ -85,7 +80,6 @@ function useDrawing({ canDraw = false } = {}) {
         emitUndo(strokeId);
     };
 
-    // Clear local and remote drawing history
     const clearCanvas = () => {
         if (!canDraw) return;
 
@@ -94,7 +88,6 @@ function useDrawing({ canDraw = false } = {}) {
         emitClear();
     };
 
-    // Convert pointer coordinates into canvas coordinates
     const getCanvasPoint = useCallback((event) => {
         const canvas = canvasRef.current;
         if (!canvas) return null;

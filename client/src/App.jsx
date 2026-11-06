@@ -1,8 +1,12 @@
+
 import { useEffect, useState } from "react";
 import { socket } from "./socket/socket";
+
 import useSocket from "./hooks/socket/useSocket";
 import useRoom from "./hooks/room/useRoom";
 import useGame from "./hooks/game/useGame";
+
+import RoomEntry from "./components/room/RoomEntry";
 import RoomLobby from "./components/room/RoomLobby";
 import GameScreen from "./components/game/GameScreen";
 import ChatPanel from "./components/chat/ChatPanel";
@@ -10,6 +14,12 @@ import ChatPanel from "./components/chat/ChatPanel";
 function App() {
     const [username, setUsername] = useState("");
     const [error, setError] = useState("");
+
+    const [roomSettings, setRoomSettings] = useState({
+        maxPlayers: 6,
+        totalRounds: 3,
+        drawTime: 80
+    });
 
     const { connectionStatus } = useSocket();
 
@@ -24,20 +34,21 @@ function App() {
     } = useRoom();
 
     const {
-        gameData,
-        setGameData,
-        wordChoices,
-        isChoosingWord,
-        startGame,
-        myWord,
-        remainingTime,
-        requestHint,
-        gameFinished,
-        selectWord,
-        finishData,
-        resetGame,
-        nextTurn
-    } = useGame();
+      gameData,
+      setGameData,
+      wordChoices,
+      isChoosingWord,
+      startGame,
+      myWord,
+      remainingTime,
+      requestHint,
+      gameFinished,
+      selectWord,
+      finishData,
+      resetGame,
+      nextTurn,
+      endRound
+  } = useGame();
 
     useEffect(() => {
         if (connectionStatus === "Disconnected") {
@@ -52,18 +63,24 @@ function App() {
         resetGame
     ]);
 
-    const handleCreateRoom = () => {
+    const handleCreateRoom = (options = {}) => {
         setError("");
         resetGame();
         setGameData(null);
-        createRoom(username.trim(), setError);
+
+        createRoom(username.trim(), setError, {
+            ...roomSettings,
+            isPrivate: options.isPrivate ?? false,
+            password: options.password ?? ""
+        });
     };
 
-    const handleJoinRoom = () => {
+    const handleJoinRoom = (options = {}) => {
         setError("");
         resetGame();
         setGameData(null);
-        joinRoom(username.trim(), setError);
+
+        joinRoom(username.trim(), setError, options);
     };
 
     const handleLeaveRoom = () => {
@@ -90,72 +107,39 @@ function App() {
         nextTurn(setError);
     };
 
-    return (
-        <div style={{ padding: "40px", fontFamily: "Arial" }}>
-            <h1>Skribbl Clone</h1>
+    const handleEndRound = () => {
+      setError("");
+      endRound(setError);
+  };
 
-            <h3>Socket Status: {connectionStatus}</h3>
+    return (
+        <main className="app">
+            <header className="app-header">
+                <h1>🎨 Skribbl Clone</h1>
+                <p>
+                    Connection Status: {connectionStatus}
+                </p>
+            </header>
+
+            {error && (
+                <p className="error-message" role="alert">
+                    {error}
+                </p>
+            )}
 
             {!roomData ? (
-                <div>
-                    <input
-                        type="text"
-                        placeholder="Enter username"
-                        value={username}
-                        onChange={(event) =>
-                            setUsername(event.target.value)
-                        }
-                    />
-
-                    <br /><br />
-
-                    <button
-                        onClick={handleCreateRoom}
-                        disabled={
-                            connectionStatus !== "Connected" ||
-                            !username.trim()
-                        }
-                    >
-                        Create Room
-                    </button>
-
-                    <br /><br />
-
-                    <input
-                        type="text"
-                        placeholder="Enter room ID"
-                        value={roomId}
-                        onChange={(event) =>
-                            setRoomId(event.target.value.toUpperCase())
-                        }
-                    />
-
-                    <br /><br />
-
-                    <button
-                        onClick={handleJoinRoom}
-                        disabled={
-                            connectionStatus !== "Connected" ||
-                            !username.trim() ||
-                            !roomId.trim()
-                        }
-                    >
-                        Join Room
-                    </button>
-                </div>
+                <RoomEntry
+                    username={username}
+                    setUsername={setUsername}
+                    roomId={roomId}
+                    setRoomId={setRoomId}
+                    onCreateRoom={handleCreateRoom}
+                    onJoinRoom={handleJoinRoom}
+                    roomSettings={roomSettings}
+                    setRoomSettings={setRoomSettings}
+                />
             ) : (
-                <div>
-                    <h2>Room: {roomData.roomId || roomData.id}</h2>
-
-                    <h3>Players</h3>
-
-                    {roomData.players.map((player) => (
-                        <p key={player.id}>
-                            {player.username} — Score: {player.score}
-                            {player.id === roomData.hostId && " (Host)"}
-                        </p>
-                    ))}
-
+                <section className="game-room">
                     {!gameData ? (
                         <RoomLobby
                             roomData={roomData}
@@ -164,31 +148,26 @@ function App() {
                             onLeaveRoom={handleLeaveRoom}
                         />
                     ) : (
-                        <GameScreen
-                            gameData={gameData}
-                            wordChoices={wordChoices}
-                            isChoosingWord={isChoosingWord}
-                            onSelectWord={handleSelectWord}
-                            myWord={myWord}
-                            remainingTime={remainingTime}
-                            onRequestHint={requestHint}
-                            gameFinished={gameFinished}
-                            finishData={finishData}
-                            isHost={socket.id === roomData.hostId}
-                            onNextTurn={handleNextTurn}
-                        />
+                      <GameScreen
+                      gameData={gameData}
+                      wordChoices={wordChoices}
+                      isChoosingWord={isChoosingWord}
+                      onSelectWord={handleSelectWord}
+                      myWord={myWord}
+                      remainingTime={remainingTime}
+                      onRequestHint={requestHint}
+                      gameFinished={gameFinished}
+                      finishData={finishData}
+                      isHost={socket.id === roomData.hostId}
+                      onNextTurn={handleNextTurn}
+                      onEndRound={handleEndRound}
+                  />
                     )}
 
                     <ChatPanel />
-                </div>
+                </section>
             )}
-
-            {error && (
-                <p style={{ color: "red" }}>
-                    {error}
-                </p>
-            )}
-        </div>
+        </main>
     );
 }
 

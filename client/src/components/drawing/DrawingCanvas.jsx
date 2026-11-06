@@ -32,7 +32,6 @@ function DrawingCanvas({ canDraw }) {
         if (!canDraw) return;
 
         event.currentTarget.setPointerCapture(event.pointerId);
-
         startStroke();
         lastPointRef.current = getCanvasPoint(event);
     };
@@ -45,8 +44,9 @@ function DrawingCanvas({ canDraw }) {
         addStroke({
             from: lastPointRef.current,
             to: currentPoint,
-            color: isErasing ? "#FFFFFF" : selectedColor,
-            lineWidth: brushSize
+            color: selectedColor,
+            lineWidth: brushSize,
+            isErasing
         });
 
         lastPointRef.current = currentPoint;
@@ -81,7 +81,9 @@ function DrawingCanvas({ canDraw }) {
 
                     <DrawingActions
                         isErasing={isErasing}
-                        onEraserToggle={() => setIsErasing(value => !value)}
+                        onEraserToggle={() =>
+                            setIsErasing(value => !value)
+                        }
                         onUndo={undo}
                         onClear={clearCanvas}
                     />

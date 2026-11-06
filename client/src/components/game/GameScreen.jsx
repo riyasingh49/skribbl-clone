@@ -16,7 +16,8 @@ function GameScreen({
     gameFinished = false,
     finishData = null,
     isHost = false,
-    onNextTurn
+    onNextTurn,
+    onEndRound
 }) {
     if (!gameData) {
         return <p>Waiting for game data...</p>;
@@ -37,47 +38,55 @@ function GameScreen({
     }
 
     return (
-        <div>
+        <section className="game-screen">
             <GameHeader gameData={gameData} />
 
-            <WordSelection
-                isDrawer={isDrawer}
-                isChoosingWord={
-                    isChoosingWord && status === "selecting-word"
-                }
-                wordChoices={wordChoices}
-                drawerName={gameData.drawer?.username}
-                onSelectWord={onSelectWord}
-            />
-
-            {status === "drawing" && (
-                <DrawingRound
+            {status === "selecting-word" && (
+                <WordSelection
                     isDrawer={isDrawer}
-                    myWord={myWord}
-                    remainingTime={remainingTime}
-                    hint={gameData.hint}
-                    onRequestHint={onRequestHint}
+                    isChoosingWord={isChoosingWord}
+                    wordChoices={wordChoices}
+                    drawerName={gameData.drawer?.username}
+                    onSelectWord={onSelectWord}
                 />
             )}
 
+            {status === "drawing" && (
+                <>
+                    <DrawingRound
+                        isDrawer={isDrawer}
+                        myWord={myWord}
+                        remainingTime={remainingTime}
+                        hint={gameData.hint}
+                        onRequestHint={onRequestHint}
+                    />
+
+                    {isHost && (
+                        <button onClick={onEndRound}>
+                            End Round
+                        </button>
+                    )}
+                </>
+            )}
+
             {status === "round-ended" && (
-                <div>
+                <div className="round-ended">
                     <RoundResult
                         correctWord={gameData.correctWord}
                     />
 
-                    {isHost && (
+                    {isHost ? (
                         <button onClick={onNextTurn}>
                             Next Turn
                         </button>
-                    )}
-
-                    {!isHost && (
-                        <p>Waiting for the host to start the next turn...</p>
+                    ) : (
+                        <p>
+                            Waiting for the host to start the next turn...
+                        </p>
                     )}
                 </div>
             )}
-        </div>
+        </section>
     );
 }
 

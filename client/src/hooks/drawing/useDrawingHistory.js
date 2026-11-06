@@ -3,47 +3,53 @@ import { useRef, useCallback } from "react";
 function useDrawingHistory() {
     const strokesRef = useRef([]);
 
-    // Add a line segment to drawing history
+    // Save one line segment.
     const addStroke = useCallback((stroke) => {
+        if (!stroke || !stroke.strokeId) return;
+
         strokesRef.current = [
             ...strokesRef.current,
             stroke
         ];
     }, []);
 
-    // Remove the most recent complete drawing gesture
+    // Undo the most recent complete drawing gesture.
     const undo = useCallback(() => {
-        if (strokesRef.current.length === 0) {
+        const strokes = strokesRef.current;
+
+        if (strokes.length === 0) {
             return null;
         }
 
-        const lastStroke =
-            strokesRef.current[strokesRef.current.length - 1];
-
+        const lastStroke = strokes[strokes.length - 1];
         const strokeId = lastStroke.strokeId;
 
-        strokesRef.current = strokesRef.current.filter(
+        if (!strokeId) return null;
+
+        strokesRef.current = strokes.filter(
             (stroke) => stroke.strokeId !== strokeId
         );
 
         return strokeId;
     }, []);
 
-    // Remove a specific drawing gesture
+    // Remove a complete gesture by its ID.
     const removeStroke = useCallback((strokeId) => {
+        if (!strokeId) return;
+
         strokesRef.current = strokesRef.current.filter(
             (stroke) => stroke.strokeId !== strokeId
         );
     }, []);
 
-    // Clear all drawing history
+    // Remove all drawing history.
     const clearHistory = useCallback(() => {
         strokesRef.current = [];
     }, []);
 
-    // Get the current drawing history
+    // Return a copy so callers cannot mutate internal history.
     const getStrokes = useCallback(() => {
-        return strokesRef.current;
+        return [...strokesRef.current];
     }, []);
 
     return {

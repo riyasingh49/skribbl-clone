@@ -8,11 +8,27 @@ const registerJoinRoomHandler = (
     socket,
     roomService
 ) => {
-
     socket.on("join-room", (data, callback) => {
         try {
             const username = data?.username;
             const roomId = data?.roomId;
+            const password = data?.password || "";
+
+            if (!username || !roomId) {
+                throw new Error("Username and room ID are required");
+            }
+
+            const room = roomService.getRoom(
+                roomId.trim().toUpperCase()
+            );
+
+            if (!room) {
+                throw new Error("Room not found");
+            }
+
+            if (room.isPrivate && !room.verifyPassword(password)) {
+                throw new Error("Incorrect room password");
+            }
 
             const result = roomService.joinRoom(
                 socket.id,
@@ -20,14 +36,11 @@ const registerJoinRoomHandler = (
                 roomId
             );
 
-            const room = result.room;
+            socket.join(result.room.id);
 
-            socket.join(room.id);
+            const roomData = getPublicRoomData(result.room);
 
-            const roomData = getPublicRoomData(room);
-
-            // Notify everyone in the room.
-            broadcastRoomUpdate(io, room);
+            broadcastRoomUpdate(io, result.room);
 
             if (typeof callback === "function") {
                 callback({
@@ -35,7 +48,6 @@ const registerJoinRoomHandler = (
                     room: roomData
                 });
             }
-
         } catch (error) {
             if (typeof callback === "function") {
                 callback({

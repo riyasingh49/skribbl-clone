@@ -32,7 +32,8 @@ const createGameEventHandlers = (state) => {
             setGameData(previous => ({
                 ...previous,
                 ...(data.gameState || data),
-                roundStatus: "drawing"
+                roundStatus: "drawing",
+                correctWord: null
             }));
         },
 
@@ -43,7 +44,6 @@ const createGameEventHandlers = (state) => {
 
             setMyWord(word || null);
         },
-
 
         onTimerUpdate: (data) => {
             const time = typeof data === "number"
@@ -93,12 +93,19 @@ const createGameEventHandlers = (state) => {
 
             setGameData(previous => ({
                 ...previous,
-                ...(data.gameState || data)
+                ...(data.gameState || data),
+                correctWord: null
             }));
         },
 
         onGameStateUpdated: (data) => {
-            setGameData(data);
+            setGameData(previous => ({
+                ...previous,
+                ...data,
+                correctWord: data.roundStatus === "round-ended"
+                    ? previous?.correctWord
+                    : null
+            }));
 
             if (data.roundStatus !== "selecting-word") {
                 setIsChoosingWord(false);

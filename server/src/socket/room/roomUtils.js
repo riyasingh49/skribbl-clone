@@ -15,7 +15,8 @@ const getPublicRoomData = (room) => {
         })),
 
         playerCount: room.getPlayerCount(),
-        settings: { ...room.settings }
+        settings: { ...room.settings },
+        isPrivate: room.isPrivate
     };
 };
 

@@ -1,12 +1,22 @@
 import { useCallback } from "react";
 
 function useCanvas(canvasRef) {
-    // Draw one line segment
-    const drawLine = useCallback((from, to, color, lineWidth) => {
+    const drawLine = useCallback((
+        from,
+        to,
+        color,
+        lineWidth,
+        isErasing = false
+    ) => {
         const canvas = canvasRef.current;
-        if (!canvas) return;
+        if (!canvas || !from || !to) return;
 
         const context = canvas.getContext("2d");
+
+        context.save();
+        context.globalCompositeOperation = isErasing
+            ? "destination-out"
+            : "source-over";
 
         context.beginPath();
         context.moveTo(from.x, from.y);
@@ -18,9 +28,9 @@ function useCanvas(canvasRef) {
         context.lineJoin = "round";
 
         context.stroke();
+        context.restore();
     }, [canvasRef]);
 
-    // Clear and redraw the canvas
     const redrawCanvas = useCallback((strokes) => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -34,12 +44,12 @@ function useCanvas(canvasRef) {
                 stroke.from,
                 stroke.to,
                 stroke.color,
-                stroke.lineWidth
+                stroke.lineWidth,
+                stroke.isErasing || false
             );
         });
     }, [canvasRef, drawLine]);
 
-    // Clear the canvas completely
     const clearCanvas = useCallback(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;

@@ -16,15 +16,22 @@ function DrawingRound({
             ) : (
                 <div>
                     <h3>Guess the word!</h3>
-                    <p>Hint: {hint || "Waiting for hint..."}</p>
 
-                    <button onClick={onRequestHint}>
+                    <p>
+                        Hint: {hint || "No letters revealed yet"}
+                    </p>
+
+                    <button
+                        onClick={onRequestHint}
+                        disabled={!onRequestHint}
+                    >
                         Request Hint
                     </button>
                 </div>
             )}
 
             <h3>Drawing Area</h3>
+
             <DrawingCanvas canDraw={isDrawer} />
         </div>
     );

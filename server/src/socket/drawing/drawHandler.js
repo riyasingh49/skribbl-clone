@@ -9,7 +9,6 @@ const registerDrawHandler = (
     roomService,
     gameService
 ) => {
-
     socket.on("draw-line", (data, callback) => {
         try {
             const { room } = validateDrawingRequest(
@@ -29,7 +28,8 @@ const registerDrawHandler = (
                 toY,
                 color,
                 width,
-                strokeId
+                strokeId,
+                isErasing = false
             } = data;
 
             if (
@@ -65,6 +65,10 @@ const registerDrawHandler = (
                 throw new Error("Invalid stroke ID");
             }
 
+            if (typeof isErasing !== "boolean") {
+                throw new Error("Invalid eraser setting");
+            }
+
             socket.to(room.id).emit("draw-line", {
                 fromX,
                 fromY,
@@ -72,13 +76,13 @@ const registerDrawHandler = (
                 toY,
                 color,
                 width,
-                strokeId
+                strokeId,
+                isErasing
             });
 
             if (typeof callback === "function") {
                 callback({ success: true });
             }
-
         } catch (error) {
             if (typeof callback === "function") {
                 callback({
