@@ -34,21 +34,21 @@ function App() {
     } = useRoom();
 
     const {
-      gameData,
-      setGameData,
-      wordChoices,
-      isChoosingWord,
-      startGame,
-      myWord,
-      remainingTime,
-      requestHint,
-      gameFinished,
-      selectWord,
-      finishData,
-      resetGame,
-      nextTurn,
-      endRound
-  } = useGame();
+        gameData,
+        setGameData,
+        wordChoices,
+        isChoosingWord,
+        startGame,
+        myWord,
+        remainingTime,
+        requestHint,
+        gameFinished,
+        selectWord,
+        finishData,
+        resetGame,
+        nextTurn,
+        endRound
+    } = useGame();
 
     useEffect(() => {
         if (connectionStatus === "Disconnected") {
@@ -108,63 +108,89 @@ function App() {
     };
 
     const handleEndRound = () => {
-      setError("");
-      endRound(setError);
-  };
+        setError("");
+        endRound(setError);
+    };
 
     return (
-        <main className="app">
-            <header className="app-header">
-                <h1>🎨 Skribbl Clone</h1>
-                <p>
-                    Connection Status: {connectionStatus}
-                </p>
+        <main className="min-h-screen min-w-[320px] bg-slate-950 px-3 py-5 text-slate-100 sm:px-6">
+            <header className="mx-auto mb-6 flex max-w-[1600px] flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h1 className="font-display text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+                        🎨 Skribbl Clone
+                    </h1>
+                    <p className="mt-1 text-xs text-slate-400">
+                        Draw, guess and have fun!
+                    </p>
+                </div>
+
+                <div className="flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900 px-4 py-2 text-xs">
+                    <span
+                        className={`h-2 w-2 rounded-full ${
+                            connectionStatus === "Connected"
+                                ? "bg-emerald-400"
+                                : "bg-red-400"
+                        }`}
+                    />
+                    <span className="text-slate-300">
+                        {connectionStatus}
+                    </span>
+                </div>
             </header>
 
             {error && (
-                <p className="error-message" role="alert">
+                <p
+                    className="mx-auto mb-4 max-w-[1600px] rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
+                    role="alert"
+                >
                     {error}
                 </p>
             )}
 
             {!roomData ? (
-                <RoomEntry
-                    username={username}
-                    setUsername={setUsername}
-                    roomId={roomId}
-                    setRoomId={setRoomId}
-                    onCreateRoom={handleCreateRoom}
-                    onJoinRoom={handleJoinRoom}
-                    roomSettings={roomSettings}
-                    setRoomSettings={setRoomSettings}
-                />
+                <div className="mx-auto max-w-3xl">
+                    <RoomEntry
+                        username={username}
+                        setUsername={setUsername}
+                        roomId={roomId}
+                        setRoomId={setRoomId}
+                        onCreateRoom={handleCreateRoom}
+                        onJoinRoom={handleJoinRoom}
+                        roomSettings={roomSettings}
+                        setRoomSettings={setRoomSettings}
+                    />
+                </div>
             ) : (
-                <section className="game-room">
-                    {!gameData ? (
-                        <RoomLobby
-                            roomData={roomData}
-                            isHost={socket.id === roomData.hostId}
-                            onStartGame={handleStartGame}
-                            onLeaveRoom={handleLeaveRoom}
-                        />
-                    ) : (
-                      <GameScreen
-                      gameData={gameData}
-                      wordChoices={wordChoices}
-                      isChoosingWord={isChoosingWord}
-                      onSelectWord={handleSelectWord}
-                      myWord={myWord}
-                      remainingTime={remainingTime}
-                      onRequestHint={requestHint}
-                      gameFinished={gameFinished}
-                      finishData={finishData}
-                      isHost={socket.id === roomData.hostId}
-                      onNextTurn={handleNextTurn}
-                      onEndRound={handleEndRound}
-                  />
-                    )}
+                <section className="mx-auto grid max-w-[1600px] grid-cols-[minmax(0,1fr)_minmax(260px,320px)] items-start gap-4 lg:gap-6">
+                    <div className="min-w-0">
+                        {!gameData ? (
+                            <RoomLobby
+                                roomData={roomData}
+                                isHost={socket.id === roomData.hostId}
+                                onStartGame={handleStartGame}
+                                onLeaveRoom={handleLeaveRoom}
+                            />
+                        ) : (
+                            <GameScreen
+                                gameData={gameData}
+                                wordChoices={wordChoices}
+                                isChoosingWord={isChoosingWord}
+                                onSelectWord={handleSelectWord}
+                                myWord={myWord}
+                                remainingTime={remainingTime}
+                                onRequestHint={requestHint}
+                                gameFinished={gameFinished}
+                                finishData={finishData}
+                                isHost={socket.id === roomData.hostId}
+                                onNextTurn={handleNextTurn}
+                                onEndRound={handleEndRound}
+                            />
+                        )}
+                    </div>
 
-                    <ChatPanel />
+                    <aside className="sticky top-5 min-w-0">
+                        <ChatPanel />
+                    </aside>
                 </section>
             )}
         </main>

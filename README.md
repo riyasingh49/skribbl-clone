@@ -173,4 +173,4 @@ The backend uses classes and service modules to organize game functionality.
 
 ## Author
 
-Developed as an internship project.
+Made by Riya Singh.

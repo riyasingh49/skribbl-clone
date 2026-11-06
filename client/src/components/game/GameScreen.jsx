@@ -1,3 +1,4 @@
+
 import { socket } from "../../socket/socket";
 import GameHeader from "./GameHeader";
 import WordSelection from "./WordSelection";
@@ -20,7 +21,11 @@ function GameScreen({
     onEndRound
 }) {
     if (!gameData) {
-        return <p>Waiting for game data...</p>;
+        return (
+            <div className="rounded-2xl border border-slate-800 bg-slate-900 p-8 text-center text-slate-400">
+                Waiting for game data...
+            </div>
+        );
     }
 
     const isDrawer = socket.id === gameData.drawer?.id;
@@ -38,7 +43,7 @@ function GameScreen({
     }
 
     return (
-        <section className="game-screen">
+        <section className="min-w-0 space-y-5">
             <GameHeader gameData={gameData} />
 
             {status === "selecting-word" && (
@@ -52,7 +57,7 @@ function GameScreen({
             )}
 
             {status === "drawing" && (
-                <>
+                <div className="space-y-4">
                     <DrawingRound
                         isDrawer={isDrawer}
                         myWord={myWord}
@@ -62,25 +67,35 @@ function GameScreen({
                     />
 
                     {isHost && (
-                        <button onClick={onEndRound}>
-                            End Round
-                        </button>
+                        <div className="flex justify-end">
+                            <button
+                                type="button"
+                                onClick={onEndRound}
+                                className="rounded-xl border border-red-500/30 bg-red-500/10 px-5 py-3 text-sm font-semibold text-red-300 transition hover:bg-red-500/20"
+                            >
+                                End Round
+                            </button>
+                        </div>
                     )}
-                </>
+                </div>
             )}
 
             {status === "round-ended" && (
-                <div className="round-ended">
+                <div className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-5">
                     <RoundResult
                         correctWord={gameData.correctWord}
                     />
 
                     {isHost ? (
-                        <button onClick={onNextTurn}>
-                            Next Turn
+                        <button
+                            type="button"
+                            onClick={onNextTurn}
+                            className="w-full rounded-xl bg-violet-600 px-5 py-3 font-semibold text-white transition hover:bg-violet-500 sm:w-auto"
+                        >
+                            Next Turn →
                         </button>
                     ) : (
-                        <p>
+                        <p className="text-sm text-slate-400">
                             Waiting for the host to start the next turn...
                         </p>
                     )}

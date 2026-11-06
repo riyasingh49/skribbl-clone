@@ -64,34 +64,51 @@ function DrawingCanvas({ canDraw }) {
     };
 
     return (
-        <div style={{ width: "100%", maxWidth: "800px" }}>
+        <div className="mx-auto w-full max-w-[800px]">
             {canDraw && (
-                <>
-                    <ColorPicker
-                        colors={colors}
-                        selectedColor={selectedColor}
-                        onColorChange={setSelectedColor}
-                    />
+                <div className="mb-4 space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-3 sm:p-4">
+                    <div>
+                        <p className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-600">
+                            Drawing colors
+                        </p>
+                        <ColorPicker
+                            colors={colors}
+                            selectedColor={selectedColor}
+                            onColorChange={setSelectedColor}
+                        />
+                    </div>
 
-                    <BrushSizePicker
-                        brushSizes={brushSizes}
-                        brushSize={brushSize}
-                        onBrushSizeChange={setBrushSize}
-                    />
+                    <div>
+                        <p className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-600">
+                            Brush settings
+                        </p>
+                        <BrushSizePicker
+                            brushSizes={brushSizes}
+                            brushSize={brushSize}
+                            onBrushSizeChange={setBrushSize}
+                        />
+                    </div>
 
-                    <DrawingActions
-                        isErasing={isErasing}
-                        onEraserToggle={() =>
-                            setIsErasing(value => !value)
-                        }
-                        onUndo={undo}
-                        onClear={clearCanvas}
-                    />
-                </>
+                    <div>
+                        <p className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-600">
+                            Canvas actions
+                        </p>
+                        <DrawingActions
+                            isErasing={isErasing}
+                            onEraserToggle={() =>
+                                setIsErasing((value) => !value)
+                            }
+                            onUndo={undo}
+                            onClear={clearCanvas}
+                        />
+                    </div>
+                </div>
             )}
 
-            <p>
-                {canDraw ? "Your drawing canvas" : "Watch the drawer!"}
+            <p className="mb-2 text-xs font-semibold text-slate-500">
+                {canDraw
+                    ? "✏️ Your drawing canvas"
+                    : "👀 Watch the drawer!"}
             </p>
 
             <canvas
@@ -102,15 +119,10 @@ function DrawingCanvas({ canDraw }) {
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
                 onPointerCancel={handlePointerUp}
-                style={{
-                    width: "100%",
-                    height: "auto",
-                    border: "2px solid #333",
-                    borderRadius: "8px",
-                    backgroundColor: "#fff",
-                    cursor: canDraw ? "crosshair" : "not-allowed",
-                    touchAction: "none"
-                }}
+                className={`block h-auto w-full rounded-xl border-2 border-slate-300 bg-white ${
+                    canDraw ? "cursor-crosshair" : "cursor-not-allowed"
+                }`}
+                style={{ touchAction: "none" }}
             />
         </div>
     );

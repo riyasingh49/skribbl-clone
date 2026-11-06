@@ -1,3 +1,4 @@
+
 function DrawingActions({
     isErasing,
     onEraserToggle,
@@ -5,56 +6,34 @@ function DrawingActions({
     onClear
 }) {
     return (
-        <div
-            style={{
-                display: "flex",
-                gap: "10px",
-                flexWrap: "wrap",
-                marginBottom: "15px"
-            }}
-        >
-            {/* Eraser */}
+        <div className="flex flex-wrap gap-2">
             <button
+                type="button"
                 onClick={onEraserToggle}
-                style={{
-                    padding: "8px 16px",
-                    backgroundColor: isErasing ? "#ddd" : "#fff",
-                    border: "1px solid #333",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                    fontWeight: "bold"
-                }}
+                aria-pressed={isErasing}
+                className={`rounded-lg border px-4 py-2 text-sm font-semibold transition ${
+                    isErasing
+                        ? "border-violet-500 bg-violet-600 text-white"
+                        : "border-slate-300 bg-white text-slate-700 hover:bg-violet-50"
+                }`}
             >
-                {isErasing ? "Eraser Active" : "Eraser"}
+                {isErasing ? "✓ Eraser Active" : "⌫ Eraser"}
             </button>
 
-            {/* Undo */}
             <button
+                type="button"
                 onClick={onUndo}
-                style={{
-                    padding: "8px 16px",
-                    border: "1px solid #333",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                    backgroundColor: "#fff"
-                }}
+                className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-violet-400 hover:bg-violet-50"
             >
                 ↶ Undo
             </button>
 
-            {/* Clear Canvas */}
             <button
+                type="button"
                 onClick={onClear}
-                style={{
-                    padding: "8px 16px",
-                    border: "1px solid #dc2626",
-                    borderRadius: "6px",
-                    backgroundColor: "#fff",
-                    color: "#dc2626",
-                    cursor: "pointer"
-                }}
+                className="rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50"
             >
-                Clear Canvas
+                🗑 Clear Canvas
             </button>
         </div>
     );
