@@ -6,7 +6,7 @@ const app = require("./app");
 const initializeSocket = require("./config/socket");
 const registerSocketHandlers = require("./socket/socketHandler");
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // Create HTTP server
 const httpServer = http.createServer(app);
